@@ -44,11 +44,31 @@ fun Application.configureSecurity(db: Database) {
                     .require(algorithm)
                     .withIssuer(jwtDomain)
                     .withAudience(jwtAudience)
-
                     .build()
             )
             validate { credential ->
-                if (credential.payload.audience.contains(jwtAudience)) JWTPrincipal(credential.payload) else null
+                val isValid =
+                    credential.payload.audience.contains(jwtAudience) && credential.payload.claims["roles"].toString()
+                        .contains("user")
+
+                if (isValid) JWTPrincipal(credential.payload) else null
+            }
+        }
+        jwt("jwtAdmin") {
+            realm = jwtRealm
+            verifier(
+                JWT
+                    .require(algorithm)
+                    .withIssuer(jwtDomain)
+                    .withAudience(jwtAudience)
+                    .build()
+            )
+            validate { credential ->
+                val isValid =
+                    credential.payload.audience.contains(jwtAudience) && credential.payload.claims["roles"].toString()
+                        .contains("admin")
+
+                if (isValid) JWTPrincipal(credential.payload) else null
             }
         }
     }

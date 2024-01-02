@@ -47,5 +47,7 @@ dependencies {
     implementation("at.favre.lib:bcrypt:0.10.2")
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+    implementation("org.mariadb.jdbc:mariadb-java-client:3.3.2")
+
 
 }

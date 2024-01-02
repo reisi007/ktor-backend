@@ -1,14 +1,14 @@
 package pictures.reisinger
 
 import io.ktor.server.application.Application
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
+import io.ktor.server.auth.authenticate
+import io.ktor.server.netty.EngineMain
+import io.ktor.server.routing.routing
 import pictures.reisinger.db.configureDatabase
 import pictures.reisinger.plugins.*
 
-fun main() {
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
-        .start(wait = true)
+fun main(args: Array<String>) {
+    EngineMain.main(args)
 }
 
 fun Application.module() {
@@ -19,4 +19,17 @@ fun Application.module() {
     configureMonitoring()
     configureSecurity(db)
 
+    setupBusinessRoutes()
+}
+
+fun Application.setupBusinessRoutes() {
+    routing {
+        authenticate("jwt") {
+            userRoutes()
+        }
+
+        authenticate("adminJwt") {
+            adminRoutes()
+        }
+    }
 }

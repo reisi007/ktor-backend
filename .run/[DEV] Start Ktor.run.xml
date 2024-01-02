@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="[DEV] Start Ktor" type="JetRunConfigurationType">
+    <option name="MAIN_CLASS_NAME" value="pictures.reisinger.ApplicationKt" />
+    <module name="pictures.reisinger.reisinger-backend.main" />
+    <option name="PROGRAM_PARAMETERS" value="-config=application.conf -config=application-dev.conf" />
+    <shortenClasspath name="NONE" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

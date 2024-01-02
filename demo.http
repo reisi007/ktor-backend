@@ -1,9 +1,9 @@
 ### Login User Admin / PWD Admin
-POST http://localhost:8080/login
+POST {{host}}/login
 Authorization: Basic YWRtaW46YWRtaW4=
 
 ### Register User Admin / PWD Admin
-PUT http://localhost:8080/register
+PUT {{host}}/register
 Content-Type: application/json
 
 {
