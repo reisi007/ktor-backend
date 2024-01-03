@@ -12,24 +12,26 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
-    val db = configureDatabase()
+    configureDatabase()
     configureSerialization()
     configureRouting()
     configureHTTP()
     configureMonitoring()
-    configureSecurity(db)
+    configureSecurity()
 
     setupBusinessRoutes()
 }
 
 fun Application.setupBusinessRoutes() {
     routing {
-        authenticate("jwt") {
+        authenticate(AuthProviders.JWT) {
             userRoutes()
         }
 
-        authenticate("adminJwt") {
+        authenticate(AuthProviders.JWT_ADMIN) {
             adminRoutes()
         }
+
+        publicRoutes()
     }
 }

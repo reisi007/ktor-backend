@@ -9,3 +9,7 @@ fun Route.userRoutes() {
 fun Route.adminRoutes() {
 
 }
+
+fun Route.publicRoutes() {
+
+}

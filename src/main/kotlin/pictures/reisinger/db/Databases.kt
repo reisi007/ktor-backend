@@ -2,12 +2,13 @@ package pictures.reisinger.db
 
 import io.ktor.server.application.Application
 import org.jetbrains.exposed.sql.Database
+import pictures.reisinger.plugins.get
 
-fun Application.configureDatabase(): Database {
+fun Application.configureDatabase() {
     val config = environment.config
-    return Database.connect(
-        url = config.property("db.url").getString(),
-        user = config.property("db.user").getString(),
-        password = config.property("db.password").getString(),
+     Database.connect(
+        url = config["db.url"].getString(),
+        user = config["db.user"].getString(),
+        password = config["db.password"].getString(),
     )
 }

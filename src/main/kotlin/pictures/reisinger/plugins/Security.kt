@@ -15,7 +15,6 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
 import kotlinx.serialization.Serializable
-import org.jetbrains.exposed.sql.Database
 import pictures.reisinger.db.LoginUserService
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -28,24 +27,29 @@ data class RegisterUserInformation(val email: String, val password: String) {
     }
 }
 
-fun Application.configureSecurity(db: Database) {
-    // Please read the jwt property from the config file if you are using EngineMain
+object AuthProviders {
+    const val JWT = "jwt"
+    const val JWT_ADMIN = "jwtAdmin"
+    const val BASIC_JWT_LOGIN = "basicJwtLogin"
+}
+
+
+fun Application.configureSecurity() {
     val jwtAudience = "jwt-audience"
     val jwtDomain = "https://backend.reisinger.pictures/"
     val jwtRealm = "reisinger-backend"
-    val jwtSecret = "secret"
+    val jwtSecret = environment.config["jwt.secret"].getString()
     val algorithm = Algorithm.HMAC512(jwtSecret)
     val loginUserService = LoginUserService()
+    val jwtVerifier = JWT
+        .require(algorithm)
+        .withIssuer(jwtDomain)
+        .withAudience(jwtAudience)
+        .build()
     authentication {
-        jwt("jwt") {
+        jwt(AuthProviders.JWT) {
             realm = jwtRealm
-            verifier(
-                JWT
-                    .require(algorithm)
-                    .withIssuer(jwtDomain)
-                    .withAudience(jwtAudience)
-                    .build()
-            )
+            verifier(jwtVerifier)
             validate { credential ->
                 val isValid =
                     credential.payload.audience.contains(jwtAudience) && credential.payload.claims["roles"].toString()
@@ -54,15 +58,9 @@ fun Application.configureSecurity(db: Database) {
                 if (isValid) JWTPrincipal(credential.payload) else null
             }
         }
-        jwt("jwtAdmin") {
+        jwt(AuthProviders.JWT_ADMIN) {
             realm = jwtRealm
-            verifier(
-                JWT
-                    .require(algorithm)
-                    .withIssuer(jwtDomain)
-                    .withAudience(jwtAudience)
-                    .build()
-            )
+            verifier(jwtVerifier)
             validate { credential ->
                 val isValid =
                     credential.payload.audience.contains(jwtAudience) && credential.payload.claims["roles"].toString()
@@ -74,7 +72,7 @@ fun Application.configureSecurity(db: Database) {
     }
 
     authentication {
-        basic(name = "basic") {
+        basic(AuthProviders.BASIC_JWT_LOGIN) {
             validate { credentials ->
                 val roles = loginUserService.findRoles(credentials)
                 if (roles.isNullOrEmpty()) {
@@ -95,7 +93,7 @@ fun Application.configureSecurity(db: Database) {
         }
 
 
-        authenticate("basic") {
+        authenticate(AuthProviders.BASIC_JWT_LOGIN) {
             post("/login") {
                 val principal = call.defaultPrincipalOrThrow()
 
@@ -115,7 +113,7 @@ fun Application.configureSecurity(db: Database) {
     }
 }
 
-inline fun ApplicationCall.defaultPrincipalOrThrow(): UserIdRolesPrincipal {
+fun ApplicationCall.defaultPrincipalOrThrow(): UserIdRolesPrincipal {
     return principalOrThrow()
 }
 
