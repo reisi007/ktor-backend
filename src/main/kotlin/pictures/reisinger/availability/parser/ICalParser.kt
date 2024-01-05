@@ -36,7 +36,7 @@ data class Event(val summary: String, val category: String?, val startTime: Loca
 
 fun Sequence<Event>.filterDateRange(
     from: LocalDate = LocalDate.now(),
-    duration: Duration = Duration.ofDays(65)
+    duration: Duration = Duration.ofDays(93)
 ): Sequence<Event> {
     val fromWithTime = from.atStartOfDay()
     val to = from.atTime(23, 59,59) + duration

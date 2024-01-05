@@ -43,12 +43,17 @@ dependencies {
     implementation("io.ktor:ktor-server-auth-jvm")
     implementation("io.ktor:ktor-server-auth-jwt-jvm")
     implementation("io.ktor:ktor-server-netty-jvm")
+    implementation("io.ktor:ktor-client-content-negotiation-jvm")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("at.favre.lib:bcrypt:0.10.2")
     testImplementation("io.ktor:ktor-server-tests-jvm")
+    testImplementation("io.ktor:ktor-server-test-host-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
     implementation("org.mariadb.jdbc:mariadb-java-client:3.3.2")
     // https://mvnrepository.com/artifact/org.mnode.ical4j/ical4j
     implementation("org.mnode.ical4j:ical4j:3.2.14")
     testImplementation("com.willowtreeapps.assertk:assertk:0.28.0")
+    implementation("io.ktor:ktor-client-core")
+    implementation("io.ktor:ktor-client-cio:$ktor_version")
+
 }

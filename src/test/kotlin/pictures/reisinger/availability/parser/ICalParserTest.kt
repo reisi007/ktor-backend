@@ -3,6 +3,7 @@ package pictures.reisinger.availability.parser
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import org.junit.Test
+import java.io.InputStream
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 import java.time.LocalDate
@@ -22,16 +23,21 @@ class ICalParserTest {
         var events = loadEventsFromBasicIcs()
         events = events.filterDateRange(from = LocalDate.of(2022, Month.SEPTEMBER, 20))
 
-        assertThat(events.count()).isEqualTo(5)
+        assertThat(events.count()).isEqualTo(7)
     }
 
     private fun loadEventsFromBasicIcs(): Sequence<Event> {
-        val inputStream = ICalParserTest::class.java.classLoader.getResourceAsStream("basic.ics")
-        inputStream ?: throw IllegalStateException("Test file not found")
+        val inputStream = loadBasicIcs()
 
         val events = InputStreamReader(inputStream, StandardCharsets.UTF_8).use {
             ICalParser.parseIcal(it)
         }
         return events
     }
+}
+
+fun loadBasicIcs(): InputStream {
+    val inputStream = ICalParserTest::class.java.classLoader.getResourceAsStream("basic.ics")
+    inputStream ?: throw IllegalStateException("Test file not found")
+    return inputStream
 }

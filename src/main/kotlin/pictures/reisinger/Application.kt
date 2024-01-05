@@ -18,20 +18,4 @@ fun Application.module() {
     configureHTTP()
     configureMonitoring()
     configureSecurity()
-
-    setupBusinessRoutes()
-}
-
-fun Application.setupBusinessRoutes() {
-    routing {
-        authenticate(AuthProviders.JWT) {
-            userRoutes()
-        }
-
-        authenticate(AuthProviders.JWT_ADMIN) {
-            adminRoutes()
-        }
-
-        publicRoutes()
-    }
 }
