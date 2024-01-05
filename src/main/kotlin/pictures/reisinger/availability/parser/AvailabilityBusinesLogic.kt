@@ -25,13 +25,11 @@ val FORMATTER_YYYY_MM = DateTimeFormatter.ofPattern("YYYY-MM")
 
 fun Sequence<Event>.toAvailability(): List<Availability> {
     return flatMap {
-        sequenceOf(
-            it.startTime to it,
-            it.endTime to it
-        )
+        sequenceOf(it.startTime to it, it.endTime to it)
     }
-        .groupBy({ (date) -> date.format(FORMATTER_YYYY_MM) }, { (_, event) -> event })
-        .asSequence()
+        .map { (time, event) -> FORMATTER_YYYY_MM.format(time) to event }
+        .distinctBy { (time, event) -> time + event.id }
+        .groupBy({ (time) -> time }, { (_, value) -> value })
         .map { (month, entries) ->
             val status: AvailabilityStatus = when {
                 entries.size >= 2 -> BUSY

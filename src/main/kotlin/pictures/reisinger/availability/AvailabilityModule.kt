@@ -21,8 +21,10 @@ fun Application.module(client: HttpClient = defaultHttpClient()) {
     routing {
         route("rest") {
             get("availability") {
-                val now = call.request.queryParameters["now"]?.let { LocalDate.parse(it, DateTimeFormatter.ISO_DATE) }
+                var now = call.request.queryParameters["now"]?.let { LocalDate.parse(it, DateTimeFormatter.ISO_DATE) }
                     ?: LocalDate.now()
+                // Analyze whole month --> start on day one
+                now = now.withDayOfMonth(1)
 
                 val fetchCalendarService = CalendarClientImpl(this@module, client)
                 val availability = ICalParser.parseIcal(fetchCalendarService.readIcal())

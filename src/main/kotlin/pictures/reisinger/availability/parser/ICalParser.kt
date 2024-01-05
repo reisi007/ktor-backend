@@ -23,6 +23,7 @@ object ICalParser {
                 val summary = it.summary.value
 
                 Event(
+                    it.uid.value,
                     summary.substringBefore('|'),
                     summary.substringAfter('|', "???"),
                     it.startDate.date.toLocalDateTime(),
@@ -32,14 +33,20 @@ object ICalParser {
     }
 }
 
-data class Event(val summary: String, val category: String?, val startTime: LocalDateTime, val endTime: LocalDateTime)
+data class Event(
+    val id: String,
+    val summary: String,
+    val category: String?,
+    val startTime: LocalDateTime,
+    val endTime: LocalDateTime
+)
 
 fun Sequence<Event>.filterDateRange(
     from: LocalDate = LocalDate.now(),
     duration: Duration = Duration.ofDays(93)
 ): Sequence<Event> {
     val fromWithTime = from.atStartOfDay()
-    val to = from.atTime(23, 59,59) + duration
+    val to = from.atTime(23, 59, 59) + duration
     return filter {
         it.startTime in fromWithTime..to ||
                 it.endTime in fromWithTime..to
