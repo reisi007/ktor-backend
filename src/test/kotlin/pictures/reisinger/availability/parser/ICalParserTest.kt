@@ -40,7 +40,7 @@ fun loadEventsFromIcs(name: String = "basic.ics"): Sequence<Event> {
 
 
 fun loadIcs(name: String = "basic.ics"): InputStream {
-    val inputStream = ICalParserTest::class.java.classLoader.getResourceAsStream(name)
+    val inputStream = ICalParserTest::class.java.classLoader.getResourceAsStream("./$name")
     inputStream ?: throw IllegalStateException("Test file not found")
     return inputStream
 }

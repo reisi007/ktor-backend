@@ -1,3 +1,6 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
 val ktor_version: String by project
 val kotlin_version: String by project
 val logback_version: String by project
@@ -23,6 +26,25 @@ application {
 
 repositories {
     mavenCentral()
+}
+
+tasks {
+    withType<Test> {
+        testLogging {
+            events(
+                TestLogEvent.FAILED,
+                TestLogEvent.PASSED,
+                TestLogEvent.SKIPPED,
+                TestLogEvent.STANDARD_ERROR,
+                TestLogEvent.STANDARD_OUT
+            )
+
+            exceptionFormat = TestExceptionFormat.FULL
+            showCauses = true
+            showExceptions = true
+            showStackTraces = true
+        }
+    }
 }
 
 dependencies {
