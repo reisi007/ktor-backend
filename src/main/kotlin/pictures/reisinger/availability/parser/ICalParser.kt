@@ -16,7 +16,7 @@ object ICalParser {
         val calendar = with(CalendarBuilder()) {
             build(reader)
         }
-        return calendar.getComponents().asSequence()
+        return calendar.components.asSequence()
             .map { it as? VEvent }
             .filterNotNull()
             .map {
@@ -40,16 +40,3 @@ data class Event(
     val startTime: LocalDateTime,
     val endTime: LocalDateTime
 )
-
-fun Sequence<Event>.filterDateRange(
-    from: LocalDate = LocalDate.now(),
-    duration: Duration = Duration.ofDays(93)
-): Sequence<Event> {
-    val fromWithTime = from.atStartOfDay()
-    val to = from.atTime(23, 59, 59) + duration
-    return filter {
-        it.startTime in fromWithTime..to ||
-                it.endTime in fromWithTime..to
-    }
-
-}

@@ -46,6 +46,7 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation-jvm")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("at.favre.lib:bcrypt:0.10.2")
+    implementation("io.ktor:ktor-server-caching-headers")
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("io.ktor:ktor-server-test-host-jvm")
     implementation("org.mariadb.jdbc:mariadb-java-client:3.3.2")

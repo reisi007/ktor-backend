@@ -2,6 +2,8 @@ package pictures.reisinger.availability.parser
 
 import kotlinx.serialization.Serializable
 import pictures.reisinger.availability.parser.AvailabilityStatus.*
+import java.time.Duration
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Serializable
@@ -21,15 +23,20 @@ enum class AvailabilityStatus {
     FREE
 }
 
-val FORMATTER_YYYY_MM = DateTimeFormatter.ofPattern("YYYY-MM")
+val FORMATTER_YYYY_MM: DateTimeFormatter = DateTimeFormatter.ofPattern("YYYY-MM")
 
-fun Sequence<Event>.toAvailability(): List<Availability> {
-    return flatMap {
-        sequenceOf(it.startTime to it, it.endTime to it)
-    }
+fun Sequence<Event>.toAvailability(from: LocalDate, duration: Duration = Duration.ofDays(93)): List<Availability> {
+    val eventsPerMonth = filterDateRange(from, duration)
+        .flatMap { sequenceOf(it.startTime to it, it.endTime to it) }
         .map { (time, event) -> FORMATTER_YYYY_MM.format(time) to event }
         .distinctBy { (time, event) -> time + event.id }
-        .groupBy({ (time) -> time }, { (_, value) -> value })
+        .groupByTo(mutableMapOf(), { (time) -> time }, { (_, value) -> value })
+
+    desiredMonthKeys(from, duration).forEach { key ->
+        eventsPerMonth.putIfAbsent(key, mutableListOf())
+    }
+
+    return eventsPerMonth
         .map { (month, entries) ->
             val status: AvailabilityStatus = when {
                 entries.size >= 2 -> BUSY
@@ -41,4 +48,25 @@ fun Sequence<Event>.toAvailability(): List<Availability> {
         }
         .sorted()
         .toList()
+}
+
+fun desiredMonthKeys(from: LocalDate, duration: Duration): Sequence<String> = sequence {
+    val endMonth = (from.atTime(23, 59, 59) + duration)
+    val lastDayOfEndMonth = endMonth.withDayOfMonth(endMonth.toLocalDate().lengthOfMonth())
+
+    var curDate = from.atStartOfDay()
+
+    while (curDate < lastDayOfEndMonth) {
+        yield(FORMATTER_YYYY_MM.format(curDate))
+        curDate = curDate.plusMonths(1)
+    }
+}
+
+internal fun Sequence<Event>.filterDateRange(from: LocalDate, duration: Duration): Sequence<Event> {
+    val fromWithTime = from.atStartOfDay()
+    val to = from.atTime(23, 59, 59) + duration
+    return filter {
+        it.startTime in fromWithTime..to ||
+                it.endTime.minusSeconds(1) in fromWithTime..to
+    }
 }

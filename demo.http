@@ -11,4 +11,7 @@ Content-Type: application/json
   "password": "admin"
 }
 
+### Get calendar availability
+GET {{host}}/rest/availability
+Accept: application/json
 
