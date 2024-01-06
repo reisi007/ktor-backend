@@ -10,7 +10,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import pictures.reisinger.availability.parser.loadBasicIcs
+import pictures.reisinger.availability.parser.loadIcs
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 import pictures.reisinger.availability.module as availabilityModule
@@ -37,7 +37,7 @@ private fun ApplicationTestBuilder.setupAvailabilityModuleIntegrationTest(): Htt
             routing {
                 get("basic.ics") {
                     call.respondText {
-                        InputStreamReader(loadBasicIcs(), StandardCharsets.UTF_8).use {
+                        InputStreamReader(loadIcs(), StandardCharsets.UTF_8).use {
                             it.readText()
                         }
                     }

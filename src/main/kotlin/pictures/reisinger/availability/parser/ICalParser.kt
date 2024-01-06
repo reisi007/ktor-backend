@@ -1,17 +1,16 @@
 package pictures.reisinger.availability.parser
 
-import io.ktor.server.util.toLocalDateTime
-import io.ktor.util.InternalAPI
+
 import net.fortuna.ical4j.data.CalendarBuilder
 import net.fortuna.ical4j.model.component.VEvent
 import java.io.Reader
-import java.time.Duration
-import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.util.*
 
 object ICalParser {
 
-    @OptIn(InternalAPI::class)
     fun parseIcal(reader: Reader): Sequence<Event> {
         val calendar = with(CalendarBuilder()) {
             build(reader)
@@ -27,10 +26,15 @@ object ICalParser {
                     summary.substringBefore('|'),
                     summary.substringAfter('|', "???"),
                     it.startDate.date.toLocalDateTime(),
-                    it.endDate.date.toLocalDateTime()
+                    // end date is excluding in ical, including here...
+                    it.endDate.date.toLocalDateTime().minusNanos(1)
                 )
             }
     }
+}
+
+fun Date.toLocalDateTime(): LocalDateTime {
+    return toInstant().atZone(ZoneId.ofOffset("UTC", ZoneOffset.UTC)).toLocalDateTime()
 }
 
 data class Event(

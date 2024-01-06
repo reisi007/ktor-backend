@@ -65,8 +65,5 @@ fun desiredMonthKeys(from: LocalDate, duration: Duration): Sequence<String> = se
 internal fun Sequence<Event>.filterDateRange(from: LocalDate, duration: Duration): Sequence<Event> {
     val fromWithTime = from.atStartOfDay()
     val to = from.atTime(23, 59, 59) + duration
-    return filter {
-        it.startTime in fromWithTime..to ||
-                it.endTime.minusSeconds(1) in fromWithTime..to
-    }
+    return filter { it.startTime in fromWithTime..to || it.endTime in fromWithTime..to }
 }

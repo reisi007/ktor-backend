@@ -14,31 +14,33 @@ class ICalParserTest {
 
     @Test
     fun `read ical file to object`() {
-        val events = loadEventsFromBasicIcs()
+        val events = loadEventsFromIcs()
 
         assertThat(events.count()).isEqualTo(70)
     }
 
     @Test
     fun `filter date range with default duration`() {
-        var events = loadEventsFromBasicIcs()
+        var events = loadEventsFromIcs()
         events = events.filterDateRange(from = LocalDate.of(2022, Month.SEPTEMBER, 20), Duration.ofDays(93))
 
         assertThat(events.count()).isEqualTo(7)
     }
 
-    private fun loadEventsFromBasicIcs(): Sequence<Event> {
-        val inputStream = loadBasicIcs()
-
-        val events = InputStreamReader(inputStream, StandardCharsets.UTF_8).use {
-            ICalParser.parseIcal(it)
-        }
-        return events
-    }
 }
 
-fun loadBasicIcs(): InputStream {
-    val inputStream = ICalParserTest::class.java.classLoader.getResourceAsStream("basic.ics")
+fun loadEventsFromIcs(name: String = "basic.ics"): Sequence<Event> {
+    val inputStream = loadIcs(name)
+
+    val events = InputStreamReader(inputStream, StandardCharsets.UTF_8).use {
+        ICalParser.parseIcal(it)
+    }
+    return events
+}
+
+
+fun loadIcs(name: String = "basic.ics"): InputStream {
+    val inputStream = ICalParserTest::class.java.classLoader.getResourceAsStream(name)
     inputStream ?: throw IllegalStateException("Test file not found")
     return inputStream
 }
