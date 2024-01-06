@@ -1,6 +1,5 @@
 package pictures.reisinger.availability.parser
 
-
 import net.fortuna.ical4j.data.CalendarBuilder
 import net.fortuna.ical4j.model.component.VEvent
 import java.io.Reader
@@ -10,6 +9,14 @@ import java.time.ZoneOffset
 import java.util.*
 
 object ICalParser {
+
+    init {
+        val properties = Properties()
+        properties.load(ICalParser::class.java.classLoader.getResourceAsStream("ical4j.properties"))
+
+        // Set the properties for iCal4j
+        System.getProperties().putAll(properties)
+    }
 
     fun parseIcal(reader: Reader): Sequence<Event> {
         val calendar = with(CalendarBuilder()) {
@@ -31,6 +38,8 @@ object ICalParser {
                 )
             }
     }
+
+
 }
 
 fun Date.toLocalDateTime(): LocalDateTime {
