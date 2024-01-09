@@ -40,7 +40,7 @@ fun Application.configureSecurity() {
     val jwtRealm = "reisinger-backend"
     val jwtSecret = environment.config["jwt.secret"].getString()
     val algorithm = Algorithm.HMAC512(jwtSecret)
-    val loginUserService = LoginUserService()
+
     val jwtVerifier = JWT
         .require(algorithm)
         .withIssuer(jwtDomain)
@@ -70,6 +70,8 @@ fun Application.configureSecurity() {
             }
         }
     }
+
+    val loginUserService = LoginUserService()
 
     authentication {
         basic(AuthProviders.BASIC_JWT_LOGIN) {

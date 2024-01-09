@@ -10,7 +10,6 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
 
-
 class LoginUserService {
     object Users : UUIDTable() {
         val email = varchar("name", length = 50).uniqueIndex("uniqueEmail")

@@ -15,6 +15,7 @@ fun Application.configureMonitoring() {
         filter { call -> call.request.path().startsWith("/") }
         callIdMdc("call-id")
     }
+
     install(CallId) {
         header(HttpHeaders.XRequestId)
         verify { callId: String ->

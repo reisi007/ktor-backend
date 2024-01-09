@@ -21,7 +21,6 @@ class CalendarClientImpl(private val iCalUrl: String, private val client: HttpCl
         client
     )
 
-
     override suspend fun readIcal(): Reader {
         val response = client.get(iCalUrl)
         if (!response.status.isSuccess()) {
@@ -31,6 +30,5 @@ class CalendarClientImpl(private val iCalUrl: String, private val client: HttpCl
 
         return StringReader(body)
     }
-
 
 }

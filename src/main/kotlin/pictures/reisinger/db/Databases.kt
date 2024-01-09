@@ -5,10 +5,10 @@ import org.jetbrains.exposed.sql.Database
 import pictures.reisinger.plugins.get
 
 fun Application.configureDatabase() {
-    val config = environment.config
-     Database.connect(
-        url = config["db.url"].getString(),
-        user = config["db.user"].getString(),
-        password = config["db.password"].getString(),
+    val config = environment.config.config("db")
+    Database.connect(
+        url = config["url"].getString(),
+        user = config["user"].getString(),
+        password = config["password"].getString(),
     )
 }

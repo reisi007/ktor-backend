@@ -1,7 +1,6 @@
 package pictures.reisinger.availability
 
 import io.ktor.client.HttpClient
-import io.ktor.http.CacheControl
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.CachingOptions
 import io.ktor.server.application.Application
@@ -16,6 +15,7 @@ import pictures.reisinger.SuspendingMemoryCache
 import pictures.reisinger.availability.parser.ICalParser
 import pictures.reisinger.availability.parser.toAvailability
 import pictures.reisinger.plugins.defaultHttpClient
+import pictures.reisinger.plugins.maxAgeOfSeconds
 import java.time.Duration
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -30,27 +30,21 @@ fun Application.module(client: HttpClient = defaultHttpClient()) {
 
     routing {
         route("rest") {
-            install(CachingHeaders) {
-                options { _, _ ->
-                    CachingOptions(
-                        CacheControl.MaxAge(
-                            maxAgeSeconds = 7200 /* 2h */,
-                            proxyMaxAgeSeconds = 7200
-                        )
-                    )
+            route("availability") {
+                install(CachingHeaders) {
+                    options { _, _ -> CachingOptions(maxAgeOfSeconds(2700 /* 2h */)) }
                 }
-            }
-            get("availability") {
-                var now = call.request.queryParameters["now"]?.let { LocalDate.parse(it, DateTimeFormatter.ISO_DATE) }
-                    ?: LocalDate.now()
-                // Analyze whole month --> start on day one
-                now = now.withDayOfMonth(1)
 
-                val availability = calendarCache.getValue()
-                    .toAvailability(from = now)
+                get {
+                    val now = call.request.queryParameters["now"]
+                        ?.let { LocalDate.parse(it, DateTimeFormatter.ISO_DATE) }
+                        ?: LocalDate.now()
 
+                    val availability = calendarCache.getValue()
+                        .toAvailability(from = now)
 
-                call.respond(HttpStatusCode.OK, availability)
+                    call.respond(HttpStatusCode.OK, availability)
+                }
             }
         }
     }
