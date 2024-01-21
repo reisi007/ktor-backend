@@ -2,6 +2,8 @@ package pictures.reisinger.availability.parser
 
 import kotlinx.serialization.Serializable
 import pictures.reisinger.availability.parser.AvailabilityStatus.*
+import pictures.reisinger.availability.parser.ShootingDurationType.LONG
+import pictures.reisinger.availability.parser.ShootingDurationType.SHORT
 import java.time.Duration
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -42,6 +44,7 @@ fun Sequence<Event>.toAvailability(from: LocalDate, duration: Duration = Duratio
         .toList()
 }
 
+
 fun desiredMonthKeys(from: LocalDate, duration: Duration): Sequence<String> = sequence {
     val endMonth = (from.atTime(23, 59, 59) + duration)
     val lastDayOfEndMonth = endMonth.withDayOfMonth(endMonth.toLocalDate().lengthOfMonth())
@@ -60,8 +63,27 @@ internal fun Sequence<Event>.filterDateRange(from: LocalDate, duration: Duration
     return filter { it.startTime in fromWithTime..to || it.endTime in fromWithTime..to }
 }
 
-private fun computeAvailabilityStatus(entries: List<Event>): AvailabilityStatus = when {
-    entries.size >= 2 -> BUSY
-    entries.size == 1 -> RELAXED
-    else -> FREE
+private fun computeAvailabilityStatus(entries: List<Event>): AvailabilityStatus {
+    val count = entries.asSequence()
+        .filter { it.category != null } // This is a shooting
+        .map { it.calculateDuration() }
+        .sumOf { it.weight }
+
+    return when {
+        count >= 2 * LONG.weight -> BUSY
+        count >= LONG.weight -> RELAXED
+        else -> FREE
+    }
+}
+
+enum class ShootingDurationType(val weight: Int) {
+    SHORT(1),
+    LONG(4)
+}
+
+fun Event.calculateDuration(): ShootingDurationType {
+    val endTimeExclusive = endTime.plusNanos(1)
+    val isShootingLong = Duration.between(startTime, endTimeExclusive) > Duration.ofHours(2)
+    return if (isShootingLong) LONG
+    else SHORT
 }
