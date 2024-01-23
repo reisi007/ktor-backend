@@ -1,11 +1,9 @@
 package pictures.reisinger.plugins
 
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.Application
-import io.ktor.server.application.ApplicationCall
-import io.ktor.server.application.install
-import io.ktor.server.plugins.statuspages.StatusPages
-import io.ktor.server.response.respondText
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.response.*
 
 fun Application.configureRouting() {
     install(StatusPages) {
@@ -25,7 +23,7 @@ private suspend fun ApplicationCall.respondError(
     cause: Throwable
 ) {
     val isDevMode = application.environment.developmentMode
-    if (isDevMode) respondText(text = statusCode.description, status = statusCode)
+    if (isDevMode) respondText(text = statusCode.description + System.lineSeparator() + cause.stackTraceToString(), status = statusCode)
     else respondText(text = "${statusCode.value}: $cause", status = statusCode)
 }
 

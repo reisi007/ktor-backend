@@ -15,3 +15,7 @@ Content-Type: application/json
 GET {{host}}/rest/availability
 Accept: application/json
 
+### Get project availability
+GET {{host}}/rest/projects/ideas
+Accept: application/json
+
