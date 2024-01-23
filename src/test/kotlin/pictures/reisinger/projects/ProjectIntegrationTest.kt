@@ -2,6 +2,7 @@ package pictures.reisinger.projects
 
 import assertk.all
 import assertk.assertions.containsExactly
+import assertk.assertions.extracting
 import assertk.assertions.hasSize
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Test
@@ -32,9 +33,7 @@ class ProjectIntegrationTest {
         client.getJson<List<ProjectDto>>("/rest/projects/ideas").isSuccessContent<List<ProjectDto>> {
             getBody().all {
                 hasSize(3)
-                given { projects ->
-                    projects.map { it.title }.assertThis { containsExactly("A", "B", "C") }
-                }
+                extracting { it.title }.containsExactly("A", "B", "C")
             }
         }
     }
