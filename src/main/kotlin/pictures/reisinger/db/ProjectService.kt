@@ -6,6 +6,7 @@ import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class ProjectService {
@@ -30,7 +31,9 @@ class ProjectService {
     }
 
     fun findAll(): List<Project> = transaction {
-        Project.all().toList()
+        Project.all()
+            .orderBy(Projects.title to SortOrder.DESC)
+            .toList()
     }
 }
 
