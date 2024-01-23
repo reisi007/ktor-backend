@@ -32,8 +32,8 @@ class ProjectIntegrationTest {
         client.getJson<List<ProjectDto>>("/rest/projects/ideas").isSuccessContent<List<ProjectDto>> {
             getBody().all {
                 hasSize(3)
-                given {
-                    it.map { it.title }.assertThis { containsExactly("A", "B", "C") }
+                given { projects ->
+                    projects.map { it.title }.assertThis { containsExactly("A", "B", "C") }
                 }
             }
         }
