@@ -3,6 +3,7 @@ package pictures.reisinger.test
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.response.respondText
@@ -15,6 +16,7 @@ import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 import pictures.reisinger.availability.module as availabilityModule
 import pictures.reisinger.module as baseModule
+import pictures.reisinger.projects.module as projectsModule
 
 fun ApplicationTestBuilder.seupTestHttpClient() = createClient {
     install(ContentNegotiation) {
@@ -60,3 +62,15 @@ fun testAvailabilityModule(block: suspend (HttpClient) -> Unit) = testApplicatio
     val client = setupAvailabilityModuleIntegrationTest()
     block(client)
 }
+
+fun testProjectsModule(setupServer: Application.() -> Unit = {}, block: suspend (HttpClient) -> Unit) =
+    testApplication {
+        withTestConfig()
+
+        application {
+            baseModule()
+            projectsModule()
+            setupServer()
+        }
+        block(seupTestHttpClient())
+    }

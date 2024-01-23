@@ -32,7 +32,7 @@ class ProjectService {
 
     fun findAll(): List<Project> = transaction {
         Project.all()
-            .orderBy(Projects.title to SortOrder.DESC)
+            .orderBy(Projects.title to SortOrder.ASC)
             .toList()
     }
 }

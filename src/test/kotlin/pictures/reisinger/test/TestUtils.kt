@@ -67,7 +67,7 @@ fun HttpReturn.isErrorContent(block: Assert<ErrorContent>.() -> Unit) =
 fun <T> HttpReturn.isSuccessContent(block: Assert<SuccessContent<T>>.() -> Unit) =
     assertThis { block(isInstanceOf<SuccessContent<T>>()) }
 
-fun <T> Assert<SuccessContent<T>>.getData() = prop(SuccessContent<T>::data)
+fun <T> Assert<SuccessContent<T>>.getBody() = prop(SuccessContent<T>::data)
 
 fun <T> T.assertThis(block: Assert<T>.() -> Unit) = assertAll {
     assertThat(this).let(block)
