@@ -37,4 +37,4 @@ out/
 
 # custom
 docker_*.cmd
-selection
+/selection
