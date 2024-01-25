@@ -38,7 +38,9 @@ suspend fun ApplicationCall.listImages() {
 
     val files = Paths.get(".", "selection", secret)
         .listDirectoryEntries()
+        .asSequence()
         .map { it.fileName.toString() }
+        .sorted()
         .toList()
 
     respond(files)
