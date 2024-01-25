@@ -1,13 +1,18 @@
 package pictures.reisinger.selection
 
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.CachingOptions
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
+import io.ktor.server.application.install
+import io.ktor.server.plugins.cachingheaders.CachingHeaders
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondFile
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import pictures.reisinger.plugins.maxAgeOfSeconds
 import java.nio.file.Paths
 import kotlin.io.path.listDirectoryEntries
 
@@ -17,8 +22,16 @@ fun Application.module() {
         route("rest") {
             route("images") {
                 route("{secret}") {
-                    get {
-                        call.listImages()
+                    install(CachingHeaders) {
+                        options { _, _ -> CachingOptions(maxAgeOfSeconds(600 /* 10 min */)) }
+                    }
+                    get { call.listImages() }
+
+                    route("{filename}") {
+                        install(CachingHeaders) {
+                            options { _, _ -> CachingOptions(maxAgeOfSeconds(1800 /* 30 min */)) }
+                        }
+                        get { call.fetchImage() }
                     }
                 }
             }
@@ -44,4 +57,21 @@ suspend fun ApplicationCall.listImages() {
         .toList()
 
     respond(files)
+}
+
+suspend fun ApplicationCall.fetchImage() {
+    val secret = parameters["secret"]
+    val filename = parameters["filename"]
+    if (
+        secret == null
+        || filename == null
+        || secret.contains(".")
+    ) {
+        response.status(HttpStatusCode.NotFound)
+    }
+
+    respondFile(Paths.get(".", "selection", secret, filename).toFile()) {
+
+    }
+
 }
