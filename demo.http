@@ -19,3 +19,6 @@ Accept: application/json
 GET {{host}}/rest/projects/ideas
 Accept: application/json
 
+### Get list of images
+GET {{host}}/rest/images/18fe827b5e19a0812d4fa2813b5a77f7
+Accept: application/json
