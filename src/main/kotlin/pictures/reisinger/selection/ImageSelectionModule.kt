@@ -46,7 +46,7 @@ suspend fun ApplicationCall.listImages() {
         secret == null
         || secret.contains(".")
     ) {
-        response.status(HttpStatusCode.NotFound)
+        response.status(HttpStatusCode.Unauthorized)
     }
 
     val files = Paths.get(".", "selection", secret)
@@ -67,7 +67,7 @@ suspend fun ApplicationCall.fetchImage() {
         || filename == null
         || secret.contains(".")
     ) {
-        response.status(HttpStatusCode.NotFound)
+        response.status(HttpStatusCode.Unauthorized)
     }
 
     respondFile(Paths.get(".", "selection", secret, filename).toFile()) {
