@@ -6,6 +6,7 @@ import org.junit.Test
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
+import java.time.Duration
 import java.time.LocalDate
 import java.time.Month
 
@@ -21,10 +22,7 @@ class ICalParserTest {
     @Test
     fun `filter date range with default duration`() {
         var events = loadEventsFromIcs()
-        events = events.filterDateRange(
-            from = LocalDate.of(2022, Month.SEPTEMBER, 20),
-            to = LocalDate.of(2023, Month.JANUARY, 31).atStartOfDay()
-        )
+        events = events.filterDateRange(from = LocalDate.of(2022, Month.SEPTEMBER, 20), Duration.ofDays(93))
 
         assertThat(events.count()).isEqualTo(7)
     }
