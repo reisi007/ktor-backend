@@ -16,4 +16,18 @@ class AvailabilityTest {
             .toAvailability(LocalDate.of(2024, Month.JANUARY, 6))
             .assertThis { assertAvailabilityStatus(RELAXED, RELAXED, RELAXED, FREE) }
     }
+
+    @Test
+    fun `when an event spans multiple months, the older months should not be visible`() {
+        sequence {
+            yield(
+                Event(
+                    "id", "summary", "category",
+                    LocalDate.of(2024, Month.JANUARY, 31).atStartOfDay(),
+                    LocalDate.of(2024, Month.FEBRUARY, 6).atStartOfDay()
+                )
+            )
+        }.toAvailability(LocalDate.of(2024, Month.FEBRUARY, 5))
+            .assertThis { assertAvailabilityStatus(RELAXED, FREE, FREE, FREE) }
+    }
 }

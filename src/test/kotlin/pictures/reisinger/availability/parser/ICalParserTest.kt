@@ -21,7 +21,10 @@ class ICalParserTest {
     @Test
     fun `filter date range with default duration`() {
         var events = loadEventsFromIcs()
-        events = events.filterDateRange(from = LocalDate.of(2022, Month.SEPTEMBER, 20), LocalDate.of(2022, Month.DECEMBER, 31).atTime(23, 59, 59))
+        events = events.filterDateRange(
+            from = LocalDate.of(2022, Month.SEPTEMBER, 20),
+            to = LocalDate.of(2022, Month.DECEMBER, 31).atEndOfDay()
+        )
 
         assertThat(events.count()).isEqualTo(7)
     }

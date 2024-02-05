@@ -32,7 +32,7 @@ fun Sequence<Event>.toAvailability(from: LocalDate): List<Availability> {
     val fromInternal = from.withDayOfMonth(1)
     val endInternal = fromInternal.plusMonths(3)
         .let { it.withDayOfMonth(it.lengthOfMonth()) }
-        .atTime(23, 59, 59)
+        .atEndOfDay()
 
     val eventsPerMonth: Map<String, List<Event>> = filterDateRange(fromInternal, endInternal)
         .flatMap { sequenceOf(it.startTime to it, it.endTime to it) }
@@ -92,3 +92,5 @@ fun Event.calculateDuration(): ShootingDurationType {
     return if (isShootingLong) LONG
     else SHORT
 }
+
+fun LocalDate.atEndOfDay(): LocalDateTime = plusDays(1).atStartOfDay().minusNanos(1)
