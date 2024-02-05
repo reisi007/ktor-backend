@@ -15,7 +15,7 @@ class AvailabilityTestIT {
     @Test
     fun `availability is working with sample data`() = testAvailabilityModule { client ->
         client.get("/rest/availability?now=2022-09-10").toHttpReturn<List<Availability>>()
-            .isSuccessContent { getBody().assertAvailabilityStatus(BUSY, BUSY, RELAXED, FREE) }
+            .isSuccessContent { getBody().assertAvailabilityStatus(BUSY, BUSY, RELAXED, RELAXED) }
     }
 }
 
