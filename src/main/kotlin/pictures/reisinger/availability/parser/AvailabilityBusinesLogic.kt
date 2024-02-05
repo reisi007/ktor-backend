@@ -6,6 +6,7 @@ import pictures.reisinger.availability.parser.ShootingDurationType.LONG
 import pictures.reisinger.availability.parser.ShootingDurationType.SHORT
 import java.time.Duration
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Serializable
@@ -27,15 +28,17 @@ enum class AvailabilityStatus {
 
 val FORMATTER_YYYY_MM: DateTimeFormatter = DateTimeFormatter.ofPattern("YYYY-MM")
 
-fun Sequence<Event>.toAvailability(from: LocalDate, duration: Duration = Duration.ofDays(93)): List<Availability> {
+fun Sequence<Event>.toAvailability(from: LocalDate): List<Availability> {
     val fromInternal = from.withDayOfMonth(1)
-    val eventsPerMonth: Map<String, List<Event>> = filterDateRange(fromInternal, duration)
+    val toInternal = fromInternal.calculateEndDate(4)
+
+    val eventsPerMonth: Map<String, List<Event>> = filterDateRange(fromInternal, toInternal)
         .flatMap { sequenceOf(it.startTime to it, it.endTime to it) }
         .map { (time, event) -> FORMATTER_YYYY_MM.format(time) to event }
         .distinctBy { (time, event) -> time + event.id }
         .groupByTo(mutableMapOf(), { (time) -> time }, { (_, value) -> value })
         .apply {
-            desiredMonthKeys(fromInternal, duration).forEach { key -> putIfAbsent(key, mutableListOf()) }
+            desiredMonthKeys(fromInternal, toInternal).forEach { key -> putIfAbsent(key, mutableListOf()) }
         }
 
     return eventsPerMonth
@@ -45,8 +48,7 @@ fun Sequence<Event>.toAvailability(from: LocalDate, duration: Duration = Duratio
 }
 
 
-fun desiredMonthKeys(from: LocalDate, duration: Duration): Sequence<String> = sequence {
-    val endMonth = (from.atTime(23, 59, 59) + duration)
+fun desiredMonthKeys(from: LocalDate, endMonth: LocalDateTime): Sequence<String> = sequence {
     val lastDayOfEndMonth = endMonth.withDayOfMonth(endMonth.toLocalDate().lengthOfMonth())
 
     var curDate = from.atStartOfDay()
@@ -57,11 +59,14 @@ fun desiredMonthKeys(from: LocalDate, duration: Duration): Sequence<String> = se
     }
 }
 
-internal fun Sequence<Event>.filterDateRange(from: LocalDate, duration: Duration): Sequence<Event> {
+internal fun Sequence<Event>.filterDateRange(from: LocalDate, to: LocalDateTime): Sequence<Event> {
     val fromWithTime = from.atStartOfDay()
-    val to = from.atTime(23, 59, 59) + duration
     return filter { it.startTime in fromWithTime..to || it.endTime in fromWithTime..to }
 }
+
+private fun LocalDate.calculateEndDate(nrOfMonths: Long): LocalDateTime = plusMonths(nrOfMonths)
+    .minusDays(1)
+    .atTime(23, 59, 59)
 
 private fun computeAvailabilityStatus(entries: List<Event>): AvailabilityStatus {
     val count = entries.asSequence()
