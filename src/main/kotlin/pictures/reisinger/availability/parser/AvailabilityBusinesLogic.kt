@@ -43,7 +43,9 @@ fun Sequence<Event>.toAvailability(from: LocalDate): List<Availability> {
             desiredMonthKeys(fromInternal, endInternal).forEach { key -> putIfAbsent(key, mutableListOf()) }
         }
 
+    val curMonthKey = FORMATTER_YYYY_MM.format(from)
     return eventsPerMonth
+        .filter { (k, _) -> k >= curMonthKey }
         .map { (month, entries) -> Availability(month, computeAvailabilityStatus(entries)) }
         .sorted()
         .toList()
