@@ -23,7 +23,10 @@ private suspend fun ApplicationCall.respondError(
     cause: Throwable
 ) {
     val isDevMode = application.environment.developmentMode
-    if (isDevMode) respondText(text = statusCode.description + System.lineSeparator() + cause.stackTraceToString(), status = statusCode)
+    if (isDevMode) respondText(
+        text = statusCode.description + System.lineSeparator() + cause.stackTraceToString(),
+        status = statusCode
+    )
     else respondText(text = "${statusCode.value}: $cause", status = statusCode)
 }
 

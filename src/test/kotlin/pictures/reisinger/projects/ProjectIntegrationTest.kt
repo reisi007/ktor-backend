@@ -7,7 +7,10 @@ import assertk.assertions.hasSize
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.Test
 import pictures.reisinger.db.ProjectDto
-import pictures.reisinger.test.*
+import pictures.reisinger.test.getBody
+import pictures.reisinger.test.getJson
+import pictures.reisinger.test.isSuccessContent
+import pictures.reisinger.test.testProjectsModule
 import pictures.reisinger.db.ProjectService.Project.Companion as Project
 
 class ProjectIntegrationTest {
