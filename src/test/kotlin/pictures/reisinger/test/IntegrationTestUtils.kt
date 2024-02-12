@@ -15,10 +15,11 @@ import pictures.reisinger.availability.parser.loadIcs
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 import pictures.reisinger.availability.module as availabilityModule
+import pictures.reisinger.events.module as eventsModule
 import pictures.reisinger.module as baseModule
 import pictures.reisinger.projects.module as projectsModule
 
-fun ApplicationTestBuilder.seupTestHttpClient() = createClient {
+fun ApplicationTestBuilder.setupTestHttpClient() = createClient {
     install(ContentNegotiation) {
         json()
     }
@@ -48,7 +49,7 @@ private fun ApplicationTestBuilder.setupAvailabilityModuleIntegrationTest(): Htt
         }
     }
 
-    val client = seupTestHttpClient()
+    val client = setupTestHttpClient()
 
     application {
         baseModule()
@@ -72,5 +73,18 @@ fun testProjectsModule(setupServer: Application.() -> Unit = {}, block: suspend 
             projectsModule()
             setupServer()
         }
-        block(seupTestHttpClient())
+        block(setupTestHttpClient())
     }
+
+fun testEventModule(setupServer: Application.() -> Unit = {}, block: suspend (HttpClient) -> Unit) =
+    testApplication {
+        withTestConfig()
+
+        application {
+            baseModule()
+            eventsModule()
+            setupServer()
+        }
+        block(setupTestHttpClient())
+    }
+

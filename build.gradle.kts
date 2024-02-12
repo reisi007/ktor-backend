@@ -51,7 +51,7 @@ dependencies {
     implementation("io.ktor:ktor-server-core-jvm")
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
     implementation("io.ktor:ktor-server-content-negotiation-jvm")
-    implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
+    implementation("org.jetbrains.exposed:exposed-java-time:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
     implementation("com.h2database:h2:$h2_version")
@@ -74,6 +74,7 @@ dependencies {
     testImplementation("io.ktor:ktor-server-test-host-jvm")
     implementation("org.mariadb.jdbc:mariadb-java-client:3.3.2")
     implementation("org.mnode.ical4j:ical4j:3.2.14")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
     implementation("io.ktor:ktor-client-cio")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")

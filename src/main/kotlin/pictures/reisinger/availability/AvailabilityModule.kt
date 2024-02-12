@@ -1,7 +1,6 @@
 package pictures.reisinger.availability
 
 import io.ktor.client.HttpClient
-import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.CachingOptions
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
@@ -43,7 +42,7 @@ fun Application.module(client: HttpClient = defaultHttpClient()) {
                     val availability = calendarCache.getValue()
                         .toAvailability(from = now)
 
-                    call.respond(HttpStatusCode.OK, availability)
+                    call.respond(availability)
                 }
             }
         }

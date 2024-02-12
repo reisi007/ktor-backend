@@ -1,6 +1,5 @@
 package pictures.reisinger.projects
 
-import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.CachingOptions
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
@@ -30,7 +29,7 @@ fun Application.module() {
                         val projects = projectService.findAll()
                             .map { it.toDto() }
 
-                        call.respond(HttpStatusCode.OK, projects)
+                        call.respond(projects)
                     }
                 }
             }
