@@ -39,7 +39,7 @@ class EventService {
     object EventSlots : IdTable<String>() {
         override val id = varchar("slot", length = 128).entityId()
         val event = reference("event", Events)
-        val availability = enumeration("availability", Availability::class).nullable()
+        val isAvailable = bool("availability").default(true)
     }
 
     class EventSlot(id: EntityID<String>) : Entity<String>(id) {
@@ -47,7 +47,7 @@ class EventService {
 
         var event by Event referencedOn EventSlots.event
         var slot by EventSlots.id
-        var availability by EventSlots.availability
+        var isAvailable by EventSlots.isAvailable
     }
 
     class Event(id: EntityID<Long>) : LongEntity(id) {
@@ -92,19 +92,20 @@ class EventService {
             throw NotFoundException()
         }
 
-        result.availability = Availability.BOOKED
-
+        result.isAvailable = false
     }
 
     fun deleteBooking(eventId: Long, eventAvailabilityDto: EventAvailabilityDto) = transaction {
-        val data = EventSlot.find {
+        val result = EventSlot.find {
             (EventSlots.event eq eventId) and (EventSlots.id eq eventAvailabilityDto.slot)
         }.firstOrNull()
 
-        data?.delete() ?: throw NotFoundException()
+        if (result == null) {
+            throw NotFoundException()
+        }
+
+        result.isAvailable = true
     }
-
-
 }
 
 @Serializable
@@ -116,7 +117,7 @@ data class EventDto(
 )
 
 @Serializable
-data class EventAvailabilityDto(val slot: String, val availabilityStatus: EventService.Availability)
+data class EventAvailabilityDto(val slot: String, val isAvailable: Boolean)
 
 
 typealias LocalDateAsString = @Serializable(with = LocalDateSerializer::class) LocalDate
@@ -144,7 +145,7 @@ fun EventService.Event.toDao(): EventDto {
         slots.map {
             EventAvailabilityDto(
                 it.slot.value,
-                it.availability ?: EventService.Availability.FREE
+                it.isAvailable
             )
         }
     )

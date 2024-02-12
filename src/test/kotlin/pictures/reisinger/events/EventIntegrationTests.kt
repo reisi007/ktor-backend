@@ -5,7 +5,6 @@ import org.junit.Test
 import pictures.reisinger.db.EventAvailabilityDto
 import pictures.reisinger.db.EventDto
 import pictures.reisinger.db.EventService
-import pictures.reisinger.db.EventService.Availability.FREE
 import pictures.reisinger.test.getBody
 import pictures.reisinger.test.getJson
 import pictures.reisinger.test.isSuccessContent
@@ -32,6 +31,6 @@ fun sampleEvent(): EventDto {
         "Title",
         LocalDate.now(),
         "Description",
-        listOf(EventAvailabilityDto("A", FREE))
+        listOf(EventAvailabilityDto("A", isAvailable = true))
     )
 }
