@@ -32,7 +32,7 @@ class EventService {
 
     object Events : LongIdTable() {
         val title = varchar("title", length = 128)
-        val date = date("date")
+        val date = date("_date")
         val description = varchar("description", length = 2048)
     }
 
@@ -58,11 +58,6 @@ class EventService {
         var description by Events.description
         val slots by EventSlot referrersOn EventSlots.event
 
-    }
-
-    @Serializable
-    enum class Availability {
-        FREE, BOOKED
     }
 
 
