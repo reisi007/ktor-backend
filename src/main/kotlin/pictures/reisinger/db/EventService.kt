@@ -137,11 +137,13 @@ fun EventService.Event.toDao(): EventDto {
         title,
         date,
         description,
-        slots.map {
+        slots.asSequence().map {
             EventAvailabilityDto(
                 it.slot.value,
                 it.isAvailable
             )
         }
+            .sortedBy { it.slot }
+            .toList()
     )
 }
