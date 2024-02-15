@@ -70,15 +70,14 @@ dependencies {
     implementation("at.favre.lib:bcrypt:0.10.2")
     implementation("io.ktor:ktor-server-caching-headers")
     implementation("io.ktor:ktor-server-caching-headers-jvm:2.3.7")
-    testImplementation("io.ktor:ktor-server-tests-jvm")
-    testImplementation("io.ktor:ktor-server-test-host-jvm")
     implementation("org.mariadb.jdbc:mariadb-java-client:3.3.2")
     implementation("org.mnode.ical4j:ical4j:3.2.14")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
     implementation("io.ktor:ktor-client-cio")
 
+    testImplementation("io.ktor:ktor-client-auth")
+    testImplementation("io.ktor:ktor-server-tests-jvm")
+    testImplementation("io.ktor:ktor-server-test-host-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
     testImplementation("com.willowtreeapps.assertk:assertk:0.28.0")
-
-
 }

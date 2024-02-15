@@ -19,20 +19,18 @@ import kotlin.io.path.listDirectoryEntries
 fun Application.module() {
 
     routing {
-        route("rest") {
-            route("images") {
-                route("{secret}") {
-                    install(CachingHeaders) {
-                        options { _, _ -> CachingOptions(maxAgeOfSeconds(600 /* 10 min */)) }
-                    }
-                    get { call.listImages() }
+        route("rest/images") {
+            route("{secret}") {
+                install(CachingHeaders) {
+                    options { _, _ -> CachingOptions(maxAgeOfSeconds(600 /* 10 min */)) }
+                }
+                get { call.listImages() }
 
-                    route("{filename}") {
-                        install(CachingHeaders) {
-                            options { _, _ -> CachingOptions(maxAgeOfSeconds(1800 /* 30 min */)) }
-                        }
-                        get { call.fetchImage() }
+                route("{filename}") {
+                    install(CachingHeaders) {
+                        options { _, _ -> CachingOptions(maxAgeOfSeconds(1800 /* 30 min */)) }
                     }
+                    get { call.fetchImage() }
                 }
             }
         }

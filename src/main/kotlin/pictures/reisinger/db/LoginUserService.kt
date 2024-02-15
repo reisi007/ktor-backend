@@ -38,6 +38,14 @@ class LoginUserService {
         }
     }
 
+    fun createAdmin(user: UserPasswordCredential) = transaction {
+        User.new {
+            email = user.name
+            roles = "user,admin"
+            pwdHash = passwordHash(user.password)
+        }
+    }
+
     fun findRoles(user: UserPasswordCredential): String? = transaction {
         val dbUser = User.find { Users.email.eq(user.name) }
             .firstOrNull()

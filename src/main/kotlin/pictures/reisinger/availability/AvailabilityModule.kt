@@ -28,22 +28,20 @@ fun Application.module(client: HttpClient = defaultHttpClient()) {
     }
 
     routing {
-        route("rest") {
-            route("availability") {
-                install(CachingHeaders) {
-                    options { _, _ -> CachingOptions(maxAgeOfSeconds(2700 /* 2h */)) }
-                }
+        route("rest/availability") {
+            install(CachingHeaders) {
+                options { _, _ -> CachingOptions(maxAgeOfSeconds(2700 /* 2h */)) }
+            }
 
-                get {
-                    val now = call.request.queryParameters["now"]
-                        ?.let { LocalDate.parse(it, DateTimeFormatter.ISO_DATE) }
-                        ?: LocalDate.now()
+            get {
+                val now = call.request.queryParameters["now"]
+                    ?.let { LocalDate.parse(it, DateTimeFormatter.ISO_DATE) }
+                    ?: LocalDate.now()
 
-                    val availability = calendarCache.getValue()
-                        .toAvailability(from = now)
+                val availability = calendarCache.getValue()
+                    .toAvailability(from = now)
 
-                    call.respond(availability)
-                }
+                call.respond(availability)
             }
         }
     }

@@ -18,19 +18,17 @@ fun Application.module() {
     val projectService = ProjectService()
 
     routing {
-        route("rest") {
-            route("projects") {
-                route("ideas") {
-                    install(CachingHeaders) {
-                        options { _, _ -> CachingOptions(maxAgeOfSeconds(2700 /* 2h */)) }
-                    }
+        route("rest/projects") {
+            route("ideas") {
+                install(CachingHeaders) {
+                    options { _, _ -> CachingOptions(maxAgeOfSeconds(2700 /* 2h */)) }
+                }
 
-                    get {
-                        val projects = projectService.findAll()
-                            .map { it.toDto() }
+                get {
+                    val projects = projectService.findAll()
+                        .map { it.toDto() }
 
-                        call.respond(projects)
-                    }
+                    call.respond(projects)
                 }
             }
         }

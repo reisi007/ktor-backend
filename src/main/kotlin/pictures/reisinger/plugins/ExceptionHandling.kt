@@ -1,9 +1,11 @@
 package pictures.reisinger.plugins
 
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.response.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.install
+import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.response.respondText
 
 fun Application.configureRouting() {
     install(StatusPages) {
@@ -31,6 +33,8 @@ private suspend fun ApplicationCall.respondError(
 }
 
 data object NotAuthorized401Exception : StatusException(HttpStatusCode.Unauthorized)
+data object BadRequest400Exception : StatusException(HttpStatusCode.BadRequest)
+data object NotFound404Exception : StatusException(HttpStatusCode.NotFound)
 
 abstract class StatusException(val statusCode: HttpStatusCode, cause: Throwable? = null) :
     Exception(statusCode.description, cause)
