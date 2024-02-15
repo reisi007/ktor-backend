@@ -1,13 +1,14 @@
 package pictures.reisinger.plugins
 
 import com.auth0.jwt.JWT
+import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.jwt.JWTAuthenticationProvider
 import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.request.receive
 import io.ktor.server.response.respondText
@@ -31,13 +32,15 @@ object AuthProviders {
     const val JWT = "jwt"
     const val JWT_ADMIN = "jwtAdmin"
     const val BASIC_JWT_LOGIN = "basicJwtLogin"
+
+
 }
 
+private const val jwtAudience = "jwt-audience"
+private const val jwtDomain = "https://backend.reisinger.pictures/"
+private const val jwtRealm = "reisinger-backend"
 
 fun Application.configureSecurity() {
-    val jwtAudience = "jwt-audience"
-    val jwtDomain = "https://backend.reisinger.pictures/"
-    val jwtRealm = "reisinger-backend"
     val jwtSecret = environment.config["jwt.secret"].getString()
     val algorithm = Algorithm.HMAC512(jwtSecret)
 
@@ -45,50 +48,24 @@ fun Application.configureSecurity() {
         .require(algorithm)
         .withIssuer(jwtDomain)
         .withAudience(jwtAudience)
+        .acceptLeeway(1) // Accept a leeway of 1 second
         .build()
     authentication {
-        jwt(AuthProviders.JWT) {
-            realm = jwtRealm
-            verifier(jwtVerifier)
-            validate { credential ->
-                val isValid =
-                    credential.payload.audience.contains(jwtAudience) && credential.payload.claims["roles"].toString()
-                        .contains("user")
-
-                if (isValid) JWTPrincipal(credential.payload) else null
-            }
-        }
-        jwt(AuthProviders.JWT_ADMIN) {
-            realm = jwtRealm
-            verifier(jwtVerifier)
-            validate { credential ->
-                val isValid =
-                    credential.payload.audience.contains(jwtAudience) && credential.payload.claims["roles"].toString()
-                        .contains("admin")
-
-                if (isValid) JWTPrincipal(credential.payload) else null
-            }
-        }
+        jwt(AuthProviders.JWT) { configureAuth(jwtVerifier, "user") }
+        jwt(AuthProviders.JWT_ADMIN) { configureAuth(jwtVerifier, "admin") }
     }
 
-    val loginUserService = LoginUserService()
+
 
     authentication {
-        basic(AuthProviders.BASIC_JWT_LOGIN) {
-            validate { credentials ->
-                val roles = loginUserService.findRoles(credentials)
-                if (roles.isNullOrEmpty()) {
-                    return@validate null
-                } else {
-                    UserIdRolesPrincipal(credentials.name, roles)
-
-                }
-            }
-        }
+        basic(AuthProviders.BASIC_JWT_LOGIN) { configureAuth() }
     }
+
+
 
     routing {
         put("register") {
+            val loginUserService = LoginUserService()
             val userInformation: RegisterUserInformation = call.receive()
             loginUserService.create(userInformation.toUserPasswordCredentials())
             call.response.status(HttpStatusCode.OK)
@@ -104,6 +81,7 @@ fun Application.configureSecurity() {
                     .withSubject(principal.name)
                     .withClaim("roles", principal.roles)
                     .withIssuedAt(Date())
+                    .withAudience(jwtAudience)
                     .withExpiresAt(LocalDateTime.now().plusHours(12).toInstant(ZoneOffset.ofHours(2)))
                     .withJWTId(UUID.randomUUID().toString())
                     .withNotBefore(Date())
@@ -115,6 +93,25 @@ fun Application.configureSecurity() {
     }
 }
 
+private fun BasicAuthenticationProvider.Config.configureAuth() {
+    validate { credentials ->
+        val roles = LoginUserService().findRoles(credentials)?.split(",")
+        if (roles.isNullOrEmpty()) return@validate null
+        else UserIdRolesPrincipal(credentials.name, roles)
+    }
+}
+
+private fun JWTAuthenticationProvider.Config.configureAuth(jwtVerifier: JWTVerifier, requiredRole: String) {
+    realm = jwtRealm
+    verifier(jwtVerifier)
+
+    validate { credentials ->
+        val roles = credentials.getListClaim("roles", String::class)
+        val isValid = credentials.payload.audience.contains(jwtAudience) && roles.contains(requiredRole)
+        if (isValid) UserIdRolesPrincipal(credentials.subject.toString(), roles) else null
+    }
+}
+
 fun ApplicationCall.defaultPrincipalOrThrow(): UserIdRolesPrincipal {
     return principalOrThrow()
 }
@@ -123,4 +120,4 @@ inline fun <reified P : Principal> ApplicationCall.principalOrThrow(): P {
     return principal<P>() ?: throw NotAuthorized401Exception
 }
 
-data class UserIdRolesPrincipal(val name: String, val roles: String) : Principal
+data class UserIdRolesPrincipal(val name: String, val roles: List<String>) : Principal
