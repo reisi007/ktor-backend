@@ -41,7 +41,7 @@ class LoginUserService {
     fun createAdmin(user: UserPasswordCredential) = transaction {
         User.new {
             email = user.name
-            roles = "user,admin"
+            roles = listOf("user", "admin").toRolesString()
             pwdHash = passwordHash(user.password)
         }
     }
@@ -56,6 +56,7 @@ class LoginUserService {
     }
 }
 
+
 private val pwdHasher = BCrypt.withDefaults()
 private val pwdVerifier = BCrypt.verifyer()
 private val bcryptCost = 12
@@ -67,3 +68,8 @@ fun passwordHash(pwd: String): String {
 fun passwordVerify(pwd: String, hashedPwd: String): Boolean {
     return pwdVerifier.verify(pwd.toCharArray(), hashedPwd).verified
 }
+
+typealias RolesString = String
+
+fun RolesString.asRolesList(): List<String> = split(",")
+fun Iterable<String>.toRolesString(): RolesString = joinToString(",")

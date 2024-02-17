@@ -17,6 +17,7 @@ import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
 import kotlinx.serialization.Serializable
 import pictures.reisinger.db.LoginUserService
+import pictures.reisinger.db.asRolesList
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.*
@@ -79,15 +80,6 @@ fun Application.configureSecurity() {
                 call.respondText(principal.buildJwt(algorithm))
             }
         }
-        post("/login/json") {
-            val loginInfo = call.receive<LoginInfo>()
-            val loginUserService = LoginUserService()
-
-            val roles = loginUserService.findRoles(UserPasswordCredential(loginInfo.user, loginInfo.password))
-            if (roles.isNullOrEmpty()) throw NotAuthorized401Exception
-
-            call.respondText(UserIdRolesPrincipal(loginInfo.user, roles.split(",")).buildJwt(algorithm))
-        }
     }
 }
 
@@ -108,7 +100,7 @@ data class LoginInfo(val user: String, val password: String)
 
 private fun BasicAuthenticationProvider.Config.configureAuth() {
     validate { credentials ->
-        val roles = LoginUserService().findRoles(credentials)?.split(",")
+        val roles = LoginUserService().findRoles(credentials)?.asRolesList()
         if (roles.isNullOrEmpty()) return@validate null
         else UserIdRolesPrincipal(credentials.name, roles)
     }
