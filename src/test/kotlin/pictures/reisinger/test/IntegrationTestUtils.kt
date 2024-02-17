@@ -132,5 +132,7 @@ private suspend fun ApplicationTestBuilder.createTestAdminHttpClient(): HttpClie
 }
 
 private fun createAdminUserInDb() {
-    LoginUserService().createAdmin(UserPasswordCredential("admin", "admin"))
+    val service = LoginUserService()
+    if (service.findRoles(UserPasswordCredential("admin", "admin")).isNullOrBlank())
+        service.createAdmin(UserPasswordCredential("admin", "admin"))
 }

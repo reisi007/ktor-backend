@@ -37,14 +37,14 @@ fun Application.module() {
 
         authenticate(AuthProviders.JWT_ADMIN) {
             route("admin/events") {
-                route("/{eventId}") {
-                    route("/reservations") {
+                route("{eventId}") {
+                    route("reservations") {
                         get {
                             val eventId = call.parameters.getOrFail("eventId").toLong()
                             call.respond(eventService.getReservationsForEvent(eventId))
                         }
 
-                        route("/{reservationId}") {
+                        route("{reservationId}") {
                             delete {
                                 val eventId = call.parameters.getOrFail("eventId").toLong()
                                 val reservationId = call.parameters.getOrFail("reservationId").toLong()
