@@ -7,15 +7,10 @@ import io.ktor.server.plugins.callid.CallId
 import io.ktor.server.plugins.callid.callIdMdc
 import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.request.path
+import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 
 fun Application.configureMonitoring() {
-    install(CallLogging) {
-        level = Level.INFO
-        filter { call -> call.request.path().startsWith("/") }
-        callIdMdc("call-id")
-    }
-
     install(CallId) {
         header(HttpHeaders.XRequestId)
         verify { callId: String ->

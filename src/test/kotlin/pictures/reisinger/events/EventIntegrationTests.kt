@@ -13,14 +13,10 @@ import org.junit.Test
 import pictures.reisinger.db.EventAvailabilityDto
 import pictures.reisinger.db.EventDto
 import pictures.reisinger.db.EventService
+import pictures.reisinger.db.EventSlotInformationDto
 import pictures.reisinger.plugins.AuthProviders
 import pictures.reisinger.plugins.defaultPrincipalOrThrow
-import pictures.reisinger.test.assertThis
-import pictures.reisinger.test.getBody
-import pictures.reisinger.test.getJson
-import pictures.reisinger.test.isSuccessContent
-import pictures.reisinger.test.testAdminEventModule
-import pictures.reisinger.test.testEventModule
+import pictures.reisinger.test.*
 import java.time.LocalDate
 
 class EventIntegrationTests {
@@ -39,25 +35,34 @@ class EventIntegrationTests {
     @Test
     fun `admin bearer token works`() = testAdminEventModule(setupServer = {
         routing {
-            route("rest/admin/test") {
-                 authenticate(AuthProviders.JWT_ADMIN) {
-                get {
-                    val principal = call.defaultPrincipalOrThrow()
-                    if (!principal.roles.contains("admin"))
-                        call.response.status(HttpStatusCode.BadRequest)
-                    else
-                        call.response.status(HttpStatusCode.OK)
+            authenticate(AuthProviders.JWT_ADMIN) {
+                route("admin/test") {
+                    get {
+                        val principal = call.defaultPrincipalOrThrow()
+                        if (!principal.roles.contains("admin"))
+                            call.response.status(HttpStatusCode.BadRequest)
+                        else
+                            call.response.status(HttpStatusCode.OK)
+                    }
                 }
             }
-             }
         }
     }) {
-        it.get("rest/admin/test").assertThis {
+        it.get("admin/test").assertThis {
             transform { response -> response.status }.isEqualTo(HttpStatusCode.OK)
         }
     }
-}
 
+    @Test
+    fun `get reservations as admin`() = testAdminEventModule(setupServer = {
+        EventService().persistEvent(sampleEvent())
+    }) {
+        it.getJson<Map<Long, List<EventSlotInformationDto>>>("/admin/events/1/reservations")
+            .isSuccessContent<Map<Long, List<EventSlotInformationDto>>> {
+                getBody().hasSize(0) // Get empty response as no reservations have been made....
+            }
+    }
+}
 
 fun sampleEvent(): EventDto {
     return EventDto(

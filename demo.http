@@ -2,6 +2,10 @@
 POST {{host}}/login
 Authorization: Basic YWRtaW46YWRtaW4=
 
+> {%
+client.global.set("auth_token", response.body);
+%}
+
 ### Register User Admin / PWD Admin
 PUT {{host}}/register
 Content-Type: application/json
@@ -26,3 +30,8 @@ Accept: application/json
 ### Get list of images
 GET {{host}}/rest/images/18fe827b5e19a0812d4fa2813b5a77f7/selection-003.jpg
 Accept: image/jpeg
+
+###  Get reservations of event 1
+GET {{host}}/admin/events/1/reservations
+Accept: application/json
+Authorization: Bearer {{auth_token}}

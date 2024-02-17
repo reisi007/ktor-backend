@@ -1,16 +1,12 @@
 package pictures.reisinger.events
 
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import io.ktor.server.routing.put
-import io.ktor.server.routing.route
-import io.ktor.server.routing.routing
+import io.ktor.server.routing.*
 import io.ktor.server.util.getOrFail
 import pictures.reisinger.db.EventService
 import pictures.reisinger.db.EventSlotInformationDto
@@ -34,39 +30,42 @@ fun Application.module() {
                     val body = call.receive<EventSlotInformationDto>()
                     val slotId = call.parameters.getOrFail("slotId").toLong()
                     eventService.insertReservation(EventSlotReservationDto(slotId, body))
+                    call.response.status(HttpStatusCode.OK)
                 }
             }
         }
 
-        route("admin/events") {
-            authenticate(AuthProviders.JWT_ADMIN) {
-                route(":eventId") {
-
-                    route("reservations") {
+        authenticate(AuthProviders.JWT_ADMIN) {
+            route("admin/events") {
+                route("/{eventId}") {
+                    route("/reservations") {
                         get {
-                            val eventId = context.parameters.getOrFail("eventId").toLong()
-                            context.respond(eventService.getReservationsForEvent(eventId))
+                            val eventId = call.parameters.getOrFail("eventId").toLong()
+                            call.respond(eventService.getReservationsForEvent(eventId))
                         }
 
-                        route(":reservationId") {
+                        route("/{reservationId}") {
                             delete {
-                                val eventId = context.parameters.getOrFail("eventId").toLong()
-                                val reservationId = context.parameters.getOrFail("reservationId").toLong()
+                                val eventId = call.parameters.getOrFail("eventId").toLong()
+                                val reservationId = call.parameters.getOrFail("reservationId").toLong()
                                 eventService.deleteReservation(eventId, reservationId)
+                                call.response.status(HttpStatusCode.OK)
                             }
                         }
                     }
 
-                    route("slots/:slotId/booking") {
+                    route("slots/{slotId}/booking") {
                         post {
-                            val eventId = context.parameters.getOrFail("eventId").toLong()
-                            val slotId = context.parameters.getOrFail("slotId").toLong()
+                            val eventId = call.parameters.getOrFail("eventId").toLong()
+                            val slotId = call.parameters.getOrFail("slotId").toLong()
                             eventService.bookSlot(eventId, slotId)
+                            call.response.status(HttpStatusCode.OK)
                         }
                         delete {
-                            val eventId = context.parameters.getOrFail("eventId").toLong()
-                            val slotId = context.parameters.getOrFail("slotId").toLong()
+                            val eventId = call.parameters.getOrFail("eventId").toLong()
+                            val slotId = call.parameters.getOrFail("slotId").toLong()
                             eventService.deleteBookedSlot(eventId, slotId)
+                            call.response.status(HttpStatusCode.OK)
                         }
                     }
                 }

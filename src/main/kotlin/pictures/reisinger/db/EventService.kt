@@ -10,12 +10,8 @@ import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.javatime.date
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import pictures.reisinger.plugins.BadRequest400Exception
 import pictures.reisinger.plugins.NotFound404Exception
@@ -146,8 +142,8 @@ class EventService {
         reservation.delete()
     }
 
-    fun getReservationsForEvent(eventId: Long): Map<Long, List<EventSlotInformationDto>> {
-        return EventSlotReservations.join(EventSlots, JoinType.INNER, EventSlotReservations.eventSlot, EventSlots.id)
+    fun getReservationsForEvent(eventId: Long): Map<Long, List<EventSlotInformationDto>> = transaction {
+        EventSlotReservations.join(EventSlots, JoinType.LEFT, EventSlotReservations.eventSlot, EventSlots.id)
             .select { EventSlots.event.eq(eventId) }
             .orderBy(EventSlots.name to SortOrder.DESC)
             .asSequence()
