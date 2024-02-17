@@ -76,22 +76,35 @@ fun Application.configureSecurity() {
             post("/login") {
                 val principal = call.defaultPrincipalOrThrow()
 
-                val jwt = JWT.create()
-                    .withIssuer(jwtDomain)
-                    .withSubject(principal.name)
-                    .withClaim("roles", principal.roles)
-                    .withIssuedAt(Date())
-                    .withAudience(jwtAudience)
-                    .withExpiresAt(LocalDateTime.now().plusHours(12).toInstant(ZoneOffset.ofHours(2)))
-                    .withJWTId(UUID.randomUUID().toString())
-                    .withNotBefore(Date())
-                    .sign(algorithm)
-
-                call.respondText(jwt)
+                call.respondText(principal.buildJwt(algorithm))
             }
+        }
+        post("/login/json") {
+            val loginInfo = call.receive<LoginInfo>()
+            val loginUserService = LoginUserService()
+
+            val roles = loginUserService.findRoles(UserPasswordCredential(loginInfo.user, loginInfo.password))
+            if (roles.isNullOrEmpty()) throw NotAuthorized401Exception
+
+            call.respondText(UserIdRolesPrincipal(loginInfo.user, roles.split(",")).buildJwt(algorithm))
         }
     }
 }
+
+private fun UserIdRolesPrincipal.buildJwt(algorithm: Algorithm): String = JWT.create()
+    .withIssuer(jwtDomain)
+    .withSubject(name)
+    .withClaim("roles", roles)
+    .withIssuedAt(Date())
+    .withAudience(jwtAudience)
+    .withExpiresAt(LocalDateTime.now().plusHours(12).toInstant(ZoneOffset.ofHours(2)))
+    .withJWTId(UUID.randomUUID().toString())
+    .withNotBefore(Date())
+    .sign(algorithm)
+
+@Serializable
+data class LoginInfo(val user: String, val password: String)
+
 
 private fun BasicAuthenticationProvider.Config.configureAuth() {
     validate { credentials ->
