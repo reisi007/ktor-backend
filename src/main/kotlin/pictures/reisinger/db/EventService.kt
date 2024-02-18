@@ -170,7 +170,13 @@ data class EventAvailabilityDto(val id: Long?, val slot: String, val isAvailable
 data class EventSlotReservationDto(val slotId: Long, val info: EventSlotInformationDto)
 
 @Serializable
-data class EventSlotInformationDto(val name: String, val email: String, val tel: String, val text: String)
+data class EventSlotInformationDto(
+    val id: Long?,
+    val name: String,
+    val email: String,
+    val tel: String,
+    val text: String
+)
 
 typealias LocalDateAsString = @Serializable(with = LocalDateSerializer::class) LocalDate
 
@@ -209,6 +215,7 @@ fun EventService.Event.toDto(): EventDto {
 
 private fun EventService.EventSlotReservation.toInformationDto(): EventSlotInformationDto {
     return EventSlotInformationDto(
+        id.value,
         name,
         email,
         tel,
