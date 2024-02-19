@@ -156,11 +156,11 @@ class EventService {
 
 @Serializable
 data class EventDto(
-    val id: Long?,
     val title: String,
     val date: LocalDateAsString,
     val description: String,
-    val availability: List<EventAvailabilityDto>
+    val availability: List<EventAvailabilityDto>,
+    val id: Long? = null,
 )
 
 @Serializable
@@ -171,11 +171,11 @@ data class EventSlotReservationDto(val slotId: Long, val info: EventSlotInformat
 
 @Serializable
 data class EventSlotInformationDto(
-    val id: Long?,
     val name: String,
     val email: String,
     val tel: String,
-    val text: String?
+    val text: String?,
+    val id: Long? = null,
 )
 
 typealias LocalDateAsString = @Serializable(with = LocalDateSerializer::class) LocalDate
@@ -197,7 +197,6 @@ class LocalDateSerializer : KSerializer<LocalDate> {
 
 fun EventService.Event.toDto(): EventDto {
     return EventDto(
-        id.value,
         title,
         date,
         description,
@@ -209,17 +208,18 @@ fun EventService.Event.toDto(): EventDto {
             )
         }
             .sortedBy { it.slot }
-            .toList()
+            .toList(),
+        id.value,
     )
 }
 
 private fun EventService.EventSlotReservation.toInformationDto(): EventSlotInformationDto {
     return EventSlotInformationDto(
-        id.value,
         name,
         email,
         tel,
-        text?.ifBlank { null }
+        text?.ifBlank { null },
+        id.value,
     )
 }
 

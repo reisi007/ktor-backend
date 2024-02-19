@@ -114,11 +114,10 @@ class EventIntegrationTests {
 
 }
 
-fun sampleEventSlotInformation() = EventSlotInformationDto(1, "Name", "e@mail.com", "+43126", "Text")
+fun sampleEventSlotInformation() = EventSlotInformationDto("Name", "e@mail.com", "+43126", "Text")
 
 fun sampleEvent(): EventDto {
     return EventDto(
-        1,
         "Title",
         LocalDate.now(),
         "Description",

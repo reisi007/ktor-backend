@@ -5,11 +5,13 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.compression.Compression
 import io.ktor.server.plugins.compression.deflate
 import io.ktor.server.plugins.compression.gzip
 import io.ktor.server.plugins.compression.minimumSize
 import io.ktor.server.plugins.cors.routing.CORS
+import org.slf4j.event.Level
 
 fun Application.configureHTTP() {
 
@@ -31,6 +33,10 @@ fun Application.configureHTTP() {
             priority = 10.0
             minimumSize(1024) // condition
         }
+    }
+
+    install(CallLogging){
+        level = Level.INFO
     }
 }
 

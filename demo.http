@@ -3,7 +3,7 @@ POST {{host}}/login
 Authorization: Basic YWRtaW46YWRtaW4=
 
 > {%
-client.global.set("auth_token", response.body);
+    client.global.set("auth_token", response.body);
 %}
 
 ### Register User Admin / PWD Admin
@@ -35,3 +35,14 @@ Accept: image/jpeg
 GET {{host}}/admin/events/1/reservations
 Accept: application/json
 Authorization: Bearer {{auth_token}}
+
+### Post reservations
+POST {{host}}/rest/events/1/slots/3/reservations
+Content-Type: application/json
+
+{
+  "name": "Florian Reisinger",
+  "email": "{{$random.(20)}}@b.c",
+  "tel": "+1234",
+  "text": "Test Text"
+}
