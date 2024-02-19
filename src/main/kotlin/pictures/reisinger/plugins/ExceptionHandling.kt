@@ -12,10 +12,12 @@ fun Application.configureRouting() {
 
         exception<StatusException> { call, cause ->
             call.respondError(cause.statusCode, cause)
+            cause.printStackTrace()
         }
 
         exception<Throwable> { call, cause ->
             call.respondError(HttpStatusCode.InternalServerError, cause)
+            cause.printStackTrace()
         }
     }
 }
