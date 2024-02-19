@@ -1,5 +1,6 @@
 *
 !src
+!selectionTest
 !*.gradle
 !*.kts
 !*.properties

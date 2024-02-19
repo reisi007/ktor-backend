@@ -11,6 +11,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.*
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.Headers
 import io.ktor.http.HttpStatusCode
@@ -48,7 +49,7 @@ suspend inline fun <reified T> HttpClient.getJson(url: String): HttpReturn<T> = 
 suspend inline fun <reified T> HttpResponse.toHttpReturn(): HttpReturn<T> = when (status.value) {
     204, 205, 304 -> NoContent(status, headers)
     in 200 until 300 -> SuccessContent(status, headers, body<T>())
-    else -> ErrorContent(body(), headers)
+    else -> ErrorContent(bodyAsText(), headers)
 }
 
 fun HttpReturn<Any>.isNoContent(block: Assert<NoContent<Any>>.() -> Unit = {}) =
@@ -56,7 +57,7 @@ fun HttpReturn<Any>.isNoContent(block: Assert<NoContent<Any>>.() -> Unit = {}) =
 
 inline fun <reified T : Any> Assert<Any>.isInstanceOf(): Assert<T> {
     return transform(name) { actual ->
-        actual as? T ?: expected("Instaceof check not successful", T::class, actual)
+        actual as? T ?: expected("Instanceof check not successful got", T::class, actual)
     }
 }
 
@@ -99,7 +100,7 @@ sealed interface HttpReturn<T>
 data class NoContent<T>(val statusCode: HttpStatusCode, val headers: Headers) : HttpReturn<T>
 
 @TestDsl
-data class ErrorContent<T>(val apiError: Error, val headers: Headers) : HttpReturn<T>
+data class ErrorContent<T>(val apiError: String, val headers: Headers) : HttpReturn<T>
 
 @TestDsl
 data class SuccessContent<T>(val statusCode: HttpStatusCode, val headers: Headers, val data: T) : HttpReturn<T>
