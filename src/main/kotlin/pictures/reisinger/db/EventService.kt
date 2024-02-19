@@ -10,12 +10,8 @@ import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.javatime.date
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import pictures.reisinger.plugins.BadRequest400Exception
 import pictures.reisinger.plugins.NotFound404Exception
@@ -136,7 +132,7 @@ class EventService {
             email = info.email
             tel = info.tel
             name = info.name
-            text = info.text
+            text = info.text?.ifBlank { null }
         }
     }
 
@@ -223,7 +219,7 @@ private fun EventService.EventSlotReservation.toInformationDto(): EventSlotInfor
         name,
         email,
         tel,
-        text
+        text?.ifBlank { null }
     )
 }
 
