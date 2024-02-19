@@ -7,9 +7,15 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
-import io.ktor.server.auth.*
+import io.ktor.server.auth.BasicAuthenticationProvider
+import io.ktor.server.auth.Principal
+import io.ktor.server.auth.UserPasswordCredential
+import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.authentication
+import io.ktor.server.auth.basic
 import io.ktor.server.auth.jwt.JWTAuthenticationProvider
 import io.ktor.server.auth.jwt.jwt
+import io.ktor.server.auth.principal
 import io.ktor.server.request.receive
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.post
@@ -33,8 +39,6 @@ object AuthProviders {
     const val JWT = "jwt"
     const val JWT_ADMIN = "jwtAdmin"
     const val BASIC_JWT_LOGIN = "basicJwtLogin"
-
-
 }
 
 private const val jwtAudience = "jwt-audience"

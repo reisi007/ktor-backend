@@ -10,8 +10,12 @@ import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.JoinType
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.javatime.date
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import pictures.reisinger.plugins.BadRequest400Exception
 import pictures.reisinger.plugins.NotFound404Exception
@@ -49,7 +53,7 @@ class EventService {
         val email = varchar("email", length = 128)
         val tel = varchar("tel", length = 128)
         val name = varchar("name", length = 256)
-        val text = varchar("text", length = 2048)
+        val text = varchar("text", length = 2048).nullable()
 
         init {
             uniqueIndex("eventReservations", eventSlot, email)
@@ -125,7 +129,7 @@ class EventService {
         result.isAvailable = true
     }
 
-    fun insertReservation(reservation: EventSlotReservationDto) = transaction {
+    fun insertReservation(reservation: EventSlotReservationDto): Unit = transaction {
         EventSlotReservation.new {
             slot = EventSlot.findById(reservation.slotId) ?: throw NotFound404Exception
             val info = reservation.info
@@ -175,7 +179,7 @@ data class EventSlotInformationDto(
     val name: String,
     val email: String,
     val tel: String,
-    val text: String
+    val text: String?
 )
 
 typealias LocalDateAsString = @Serializable(with = LocalDateSerializer::class) LocalDate

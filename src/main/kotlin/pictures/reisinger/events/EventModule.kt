@@ -6,7 +6,11 @@ import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
-import io.ktor.server.routing.*
+import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
+import io.ktor.server.routing.put
+import io.ktor.server.routing.route
+import io.ktor.server.routing.routing
 import io.ktor.server.util.getOrFail
 import pictures.reisinger.db.EventService
 import pictures.reisinger.db.EventSlotInformationDto
@@ -24,8 +28,7 @@ fun Application.module() {
                 call.respond(eventService.findAllInFuture())
             }
 
-            route(":eventId/slots/:slotId/reservations") {
-
+            route("{eventId}/slots/{slotId}/reservations") {
                 put {
                     val body = call.receive<EventSlotInformationDto>()
                     val slotId = call.parameters.getOrFail("slotId").toLong()
@@ -55,12 +58,13 @@ fun Application.module() {
                     }
 
                     route("slots/{slotId}/booking") {
-                        post {
+                        put {
                             val eventId = call.parameters.getOrFail("eventId").toLong()
                             val slotId = call.parameters.getOrFail("slotId").toLong()
                             eventService.bookSlot(eventId, slotId)
                             call.response.status(HttpStatusCode.OK)
                         }
+
                         delete {
                             val eventId = call.parameters.getOrFail("eventId").toLong()
                             val slotId = call.parameters.getOrFail("slotId").toLong()

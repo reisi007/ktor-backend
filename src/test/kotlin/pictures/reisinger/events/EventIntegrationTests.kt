@@ -2,8 +2,13 @@ package pictures.reisinger.events;
 
 import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
 import io.ktor.server.routing.get
@@ -14,9 +19,15 @@ import pictures.reisinger.db.EventAvailabilityDto
 import pictures.reisinger.db.EventDto
 import pictures.reisinger.db.EventService
 import pictures.reisinger.db.EventSlotInformationDto
+import pictures.reisinger.db.EventSlotReservationDto
 import pictures.reisinger.plugins.AuthProviders
 import pictures.reisinger.plugins.defaultPrincipalOrThrow
-import pictures.reisinger.test.*
+import pictures.reisinger.test.assertThis
+import pictures.reisinger.test.getBody
+import pictures.reisinger.test.getJson
+import pictures.reisinger.test.isSuccessContent
+import pictures.reisinger.test.testAdminEventModule
+import pictures.reisinger.test.testEventModule
 import java.time.LocalDate
 
 class EventIntegrationTests {
@@ -24,12 +35,24 @@ class EventIntegrationTests {
     @Test
     fun `event of the same day is returned, events of the past are ignored`() = testEventModule(
         setupServer = {
-            EventService().persistEvent(sampleEvent())
-            EventService().persistEvent(sampleEvent().copy(date = LocalDate.now().minusDays(1)))
+            val eventService = EventService()
+            eventService.persistEvent(sampleEvent())
+            eventService.persistEvent(sampleEvent().copy(date = LocalDate.now().minusDays(1)))
         }
     ) {
         it.getJson<List<EventDto>>("/rest/events")
-            .isSuccessContent<List<EventDto>> { getBody().hasSize(1) }
+            .isSuccessContent { getBody().hasSize(1) }
+    }
+
+    @Test
+    fun `reservate an event`() = testEventModule(setupServer = {
+        val eventService = EventService()
+        eventService.persistEvent(sampleEvent())
+    }) {
+        it.put("rest/events/1/slots/1/reservations") {
+            setBody(sampleEventSlotInformation())
+            contentType(ContentType.Application.Json)
+        }.status.assertThis { isEqualTo(HttpStatusCode.OK) }
     }
 
     @Test
@@ -55,14 +78,55 @@ class EventIntegrationTests {
 
     @Test
     fun `get reservations as admin`() = testAdminEventModule(setupServer = {
-        EventService().persistEvent(sampleEvent())
+        val eventService = EventService()
+        val eventDto = sampleEvent()
+        eventService.persistEvent(eventDto)
+        eventService.insertReservation(EventSlotReservationDto(1, sampleEventSlotInformation()))
     }) {
         it.getJson<Map<Long, List<EventSlotInformationDto>>>("/admin/events/1/reservations")
-            .isSuccessContent<Map<Long, List<EventSlotInformationDto>>> {
-                getBody().hasSize(0) // Get empty response as no reservations have been made....
-            }
+            .isSuccessContent { getBody().hasSize(1) }
     }
+
+    @Test
+    fun `booking an event works`() = testAdminEventModule(setupServer = {
+        val eventService = EventService()
+        val eventDto = sampleEvent()
+        eventService.persistEvent(eventDto)
+    }) { client ->
+        client.put("admin/events/1/slots/1/booking").status.assertThis {
+            isEqualTo(HttpStatusCode.OK)
+        }
+    }
+
+    @Test
+    fun `deleting an event booking works`() = testAdminEventModule(setupServer = {
+        val eventService = EventService()
+        val eventDto = sampleEvent()
+        eventService.persistEvent(eventDto)
+        eventService.bookSlot(1, 1)
+    }) { client ->
+        client.delete("admin/events/1/slots/1/booking").status.assertThis {
+            isEqualTo(HttpStatusCode.OK)
+        }
+    }
+
+    @Test
+    fun `deleting an event reservation works`() = testAdminEventModule(setupServer = {
+        val eventService = EventService()
+        val eventDto = sampleEvent()
+        eventService.persistEvent(eventDto)
+        eventService.insertReservation(EventSlotReservationDto(1, sampleEventSlotInformation()))
+
+    }) { client ->
+        client.delete("admin/events/1/reservations/1").status.assertThis {
+            isEqualTo(HttpStatusCode.OK)
+        }
+    }
+
+
 }
+
+fun sampleEventSlotInformation() = EventSlotInformationDto(1, "Name", "e@mail.com", "+43126", "Text")
 
 fun sampleEvent(): EventDto {
     return EventDto(

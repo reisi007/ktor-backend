@@ -18,42 +18,41 @@ import io.ktor.http.contentType
 import java.util.*
 import kotlin.reflect.KProperty1
 
-
 @TestDsl
-suspend inline fun <reified T> HttpClient.postJson(url: String, data: T): HttpReturn = post(url) {
+suspend inline fun <reified T> HttpClient.postJson(url: String, data: T): HttpReturn<T> = post(url) {
     accept(ContentType.Application.Json)
     contentType(ContentType.Application.Json)
     setBody(data)
 }.toHttpReturn<T>()
 
 @TestDsl
-suspend inline fun <reified T> HttpClient.putJson(url: String, data: T): HttpReturn = put(url) {
+suspend inline fun <reified T> HttpClient.putJson(url: String, data: T): HttpReturn<T> = put(url) {
     accept(ContentType.Application.Json)
     contentType(ContentType.Application.Json)
     setBody(data)
 }.toHttpReturn<T>()
 
 @TestDsl
-suspend inline fun <reified T> HttpClient.deleteJson(url: String, data: T): HttpReturn = delete(url) {
+suspend inline fun <reified T> HttpClient.deleteJson(url: String, data: T): HttpReturn<T> = delete(url) {
     accept(ContentType.Application.Json)
     contentType(ContentType.Application.Json)
     setBody(data)
 }.toHttpReturn<T>()
 
 @TestDsl
-suspend inline fun <reified T> HttpClient.getJson(url: String): HttpReturn = get(url) {
+suspend inline fun <reified T> HttpClient.getJson(url: String): HttpReturn<T> = get(url) {
     accept(ContentType.Application.Json)
 }.toHttpReturn<T>()
 
 @TestDsl
-suspend inline fun <reified T> HttpResponse.toHttpReturn(): HttpReturn = when (status.value) {
+suspend inline fun <reified T> HttpResponse.toHttpReturn(): HttpReturn<T> = when (status.value) {
     204, 205, 304 -> NoContent(status, headers)
     in 200 until 300 -> SuccessContent(status, headers, body<T>())
     else -> ErrorContent(body(), headers)
 }
 
-
-fun HttpReturn.isNoContent(block: Assert<NoContent>.() -> Unit = {}) = assertThis { block(isInstanceOf<NoContent>()) }
+fun HttpReturn<Any>.isNoContent(block: Assert<NoContent<Any>>.() -> Unit = {}) =
+    assertThis { block(isInstanceOf<NoContent<Any>>()) }
 
 inline fun <reified T : Any> Assert<Any>.isInstanceOf(): Assert<T> {
     return transform(name) { actual ->
@@ -61,10 +60,10 @@ inline fun <reified T : Any> Assert<Any>.isInstanceOf(): Assert<T> {
     }
 }
 
-fun HttpReturn.isErrorContent(block: Assert<ErrorContent>.() -> Unit) =
-    assertThis { block(isInstanceOf<ErrorContent>()) }
+fun HttpReturn<Any>.isErrorContent(block: Assert<ErrorContent<Any>>.() -> Unit) =
+    assertThis { block(isInstanceOf<ErrorContent<Any>>()) }
 
-fun <T> HttpReturn.isSuccessContent(block: Assert<SuccessContent<T>>.() -> Unit) =
+fun <T> HttpReturn<T>.isSuccessContent(block: Assert<SuccessContent<T>>.() -> Unit) =
     assertThis { block(isInstanceOf<SuccessContent<T>>()) }
 
 fun <T> Assert<SuccessContent<T>>.getBody() = prop(SuccessContent<T>::data)
@@ -94,14 +93,13 @@ fun <I, O> Assert<Pair<I, I>>.propPair(callable: KProperty1<I, O>): Assert<Pair<
 annotation class TestDsl
 
 @TestDsl
-sealed interface HttpReturn
+sealed interface HttpReturn<T>
 
 @TestDsl
-data class NoContent(val statusCode: HttpStatusCode, val headers: Headers) : HttpReturn
+data class NoContent<T>(val statusCode: HttpStatusCode, val headers: Headers) : HttpReturn<T>
 
 @TestDsl
-data class ErrorContent(val apiError: Error, val headers: Headers) : HttpReturn
-
+data class ErrorContent<T>(val apiError: Error, val headers: Headers) : HttpReturn<T>
 
 @TestDsl
-data class SuccessContent<T>(val statusCode: HttpStatusCode, val headers: Headers, val data: T) : HttpReturn
+data class SuccessContent<T>(val statusCode: HttpStatusCode, val headers: Headers, val data: T) : HttpReturn<T>

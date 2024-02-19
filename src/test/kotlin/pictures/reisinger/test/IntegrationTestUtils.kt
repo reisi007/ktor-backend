@@ -8,15 +8,13 @@ import io.ktor.client.plugins.auth.providers.BasicAuthCredentials
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.basic
 import io.ktor.client.plugins.auth.providers.bearer
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.post
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
-import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.auth.UserPasswordCredential
-import io.ktor.server.config.ApplicationConfig
+import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
@@ -24,33 +22,17 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import pictures.reisinger.availability.parser.loadIcs
 import pictures.reisinger.db.LoginUserService
+import pictures.reisinger.plugins.configureClient
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
+import java.util.*
 import pictures.reisinger.availability.module as availabilityModule
 import pictures.reisinger.events.module as eventsModule
 import pictures.reisinger.module as baseModule
 import pictures.reisinger.projects.module as projectsModule
+import pictures.reisinger.selection.module as selectionModule
 
-typealias IntegrationTestBuilder = suspend ApplicationTestBuilder.(HttpClient) -> Unit
-typealias IntegrationTestServerSetup = Application.() -> Unit
-
-fun ApplicationTestBuilder.setupTestHttpClient(config: HttpClientConfig<out HttpClientEngineConfig>.() -> Unit = {}) =
-    createClient {
-        install(ContentNegotiation) {
-            json()
-        }
-        config()
-    }
-
-fun ApplicationTestBuilder.withTestConfig() {
-    environment {
-        developmentMode = false
-        config = ApplicationConfig("application-test.conf")
-    }
-}
-
-fun testAvailabilityModule(block: IntegrationTestBuilder) = testApplication {
-    withTestConfig()
+fun testAvailabilityModule(block: IntegrationTestBuilder) = testWithDefaultConfig {
 
     externalServices {
         hosts("https://external.service") {
@@ -76,26 +58,38 @@ fun testAvailabilityModule(block: IntegrationTestBuilder) = testApplication {
 }
 
 fun testProjectsModule(setupServer: IntegrationTestServerSetup = {}, block: suspend (HttpClient) -> Unit) =
-    testApplication {
-        withTestConfig()
+    testWithDefaultConfig {
 
         application {
             baseModule()
             projectsModule()
             setupServer()
         }
+
+        block(setupTestHttpClient())
+    }
+
+fun testSelectionsModule(setupServer: IntegrationTestServerSetup = {}, block: suspend (HttpClient) -> Unit) =
+    testWithDefaultConfig {
+
+        application {
+            baseModule()
+            selectionModule()
+            setupServer()
+        }
+
         block(setupTestHttpClient())
     }
 
 fun testEventModule(setupServer: IntegrationTestServerSetup = {}, block: IntegrationTestBuilder) =
-    testApplication {
-        withTestConfig()
+    testWithDefaultConfig {
 
         application {
             baseModule()
             eventsModule()
             setupServer()
         }
+
         block(setupTestHttpClient())
     }
 
@@ -131,8 +125,35 @@ private suspend fun ApplicationTestBuilder.createTestAdminHttpClient(): HttpClie
     }
 }
 
-private fun createAdminUserInDb() {
-    val service = LoginUserService()
-    if (service.findRoles(UserPasswordCredential("admin", "admin")).isNullOrBlank())
-        service.createAdmin(UserPasswordCredential("admin", "admin"))
+private fun ApplicationTestBuilder.setupTestHttpClient(config: HttpClientConfig<out HttpClientEngineConfig>.() -> Unit = {}) =
+    createClient {
+        configureClient()
+        config()
+    }
+
+private suspend fun ApplicationTestBuilder.withTestConfig(block: suspend ApplicationTestBuilder.() -> Unit) {
+    val jdbcUrl = "jdbc:h2:mem:${UUID.randomUUID()};DB_CLOSE_DELAY=-1"
+    environment {
+        developmentMode = false
+        config = MapApplicationConfig().apply {
+            put("db.url", jdbcUrl)
+            put("db.user", "root")
+            put("db.password", "")
+
+            put("app.availability.ical", "https://external.service/basic.ics")
+
+            put("jwt.secret", "test")
+        }
+    }
+
+    block()
 }
+
+private fun testWithDefaultConfig(block: suspend ApplicationTestBuilder.() -> Unit) = testApplication {
+    withTestConfig { block() }
+}
+
+private fun createAdminUserInDb() = LoginUserService().createAdmin(UserPasswordCredential("admin", "admin"))
+
+typealias IntegrationTestBuilder = suspend ApplicationTestBuilder.(HttpClient) -> Unit
+typealias IntegrationTestServerSetup = Application.() -> Unit

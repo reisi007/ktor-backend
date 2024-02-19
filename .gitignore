@@ -37,4 +37,7 @@ out/
 
 # custom
 docker_*.cmd
-/selection
+
+selection/*
+!selection/secret
+!selection/README.md

@@ -33,7 +33,7 @@ class ProjectIntegrationTest {
             }
         }
     ) { client ->
-        client.getJson<List<ProjectDto>>("/rest/projects/ideas").isSuccessContent<List<ProjectDto>> {
+        client.getJson<List<ProjectDto>>("rest/projects/ideas").isSuccessContent {
             getBody().all {
                 hasSize(3)
                 extracting { it.title }.containsExactly("A", "B", "C")

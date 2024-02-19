@@ -64,12 +64,10 @@ suspend fun ApplicationCall.fetchImage() {
         secret == null
         || filename == null
         || secret.contains(".")
+        || filename.contains("..")
     ) {
         response.status(HttpStatusCode.Unauthorized)
     }
 
-    respondFile(Paths.get(".", "selection", secret, filename).toFile()) {
-
-    }
-
+    respondFile(Paths.get(".", "selection", secret, filename).toFile())
 }
