@@ -60,13 +60,9 @@ fun Application.configureSecurity() {
         jwt(AuthProviders.JWT_ADMIN) { configureAuth(jwtVerifier, "admin") }
     }
 
-
-
     authentication {
         basic(AuthProviders.BASIC_JWT_LOGIN) { configureAuth() }
     }
-
-
 
     routing {
         put("register") {
@@ -75,7 +71,6 @@ fun Application.configureSecurity() {
             loginUserService.create(userInformation.toUserPasswordCredentials())
             call.response.status(HttpStatusCode.OK)
         }
-
 
         authenticate(AuthProviders.BASIC_JWT_LOGIN) {
             post("/login") {
