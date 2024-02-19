@@ -2,10 +2,7 @@ package pictures.reisinger.events;
 
 import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
-import io.ktor.client.request.delete
-import io.ktor.client.request.get
-import io.ktor.client.request.put
-import io.ktor.client.request.setBody
+import io.ktor.client.request.*
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
@@ -15,19 +12,10 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import org.junit.Test
-import pictures.reisinger.db.EventAvailabilityDto
-import pictures.reisinger.db.EventDto
-import pictures.reisinger.db.EventService
-import pictures.reisinger.db.EventSlotInformationDto
-import pictures.reisinger.db.EventSlotReservationDto
+import pictures.reisinger.db.*
 import pictures.reisinger.plugins.AuthProviders
 import pictures.reisinger.plugins.defaultPrincipalOrThrow
-import pictures.reisinger.test.assertThis
-import pictures.reisinger.test.getBody
-import pictures.reisinger.test.getJson
-import pictures.reisinger.test.isSuccessContent
-import pictures.reisinger.test.testAdminEventModule
-import pictures.reisinger.test.testEventModule
+import pictures.reisinger.test.*
 import java.time.LocalDate
 
 class EventIntegrationTests {
@@ -49,7 +37,7 @@ class EventIntegrationTests {
         val eventService = EventService()
         eventService.persistEvent(sampleEvent())
     }) {
-        it.put("rest/events/1/slots/1/reservations") {
+        it.post("rest/events/1/slots/1/reservations") {
             setBody(sampleEventSlotInformation())
             contentType(ContentType.Application.Json)
         }.status.assertThis { isEqualTo(HttpStatusCode.OK) }

@@ -6,11 +6,7 @@ import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.put
-import io.ktor.server.routing.route
-import io.ktor.server.routing.routing
+import io.ktor.server.routing.*
 import io.ktor.server.util.getOrFail
 import pictures.reisinger.db.EventService
 import pictures.reisinger.db.EventSlotInformationDto
@@ -29,7 +25,7 @@ fun Application.module() {
             }
 
             route("{eventId}/slots/{slotId}/reservations") {
-                put {
+                post {
                     val body = call.receive<EventSlotInformationDto>()
                     val slotId = call.parameters.getOrFail("slotId").toLong()
                     eventService.insertReservation(EventSlotReservationDto(slotId, body))
