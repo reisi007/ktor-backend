@@ -12,6 +12,7 @@ import io.ktor.server.response.respondFile
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import pictures.reisinger.plugins.get
 import pictures.reisinger.plugins.maxAgeOfSeconds
 import java.nio.file.Paths
 import kotlin.io.path.listDirectoryEntries
@@ -47,7 +48,7 @@ suspend fun ApplicationCall.listImages() {
         response.status(HttpStatusCode.Unauthorized)
     }
 
-    val files = Paths.get(".", "selection", secret)
+    val files = Paths.get(".", getImageSelectionFolder(), secret)
         .listDirectoryEntries()
         .asSequence()
         .map { it.fileName.toString() }
@@ -56,6 +57,7 @@ suspend fun ApplicationCall.listImages() {
 
     respond(files)
 }
+
 
 suspend fun ApplicationCall.fetchImage() {
     val secret = parameters["secret"]
@@ -69,5 +71,8 @@ suspend fun ApplicationCall.fetchImage() {
         response.status(HttpStatusCode.Unauthorized)
     }
 
-    respondFile(Paths.get(".", "selection", secret, filename).toFile())
+    respondFile(Paths.get(".", getImageSelectionFolder(), secret, filename).toFile())
 }
+
+private fun ApplicationCall.getImageSelectionFolder() =
+    application.environment.config.config("images.selection")["folder"].getString()

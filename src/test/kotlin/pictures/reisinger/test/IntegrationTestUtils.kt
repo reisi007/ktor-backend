@@ -143,6 +143,8 @@ private suspend fun ApplicationTestBuilder.withTestConfig(block: suspend Applica
             put("app.availability.ical", "https://external.service/basic.ics")
 
             put("jwt.secret", "test")
+
+            put("images.selection.folder", "selectionTest")
         }
     }
 
