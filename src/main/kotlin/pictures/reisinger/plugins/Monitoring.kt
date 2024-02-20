@@ -6,6 +6,7 @@ import io.ktor.server.application.install
 import io.ktor.server.plugins.callid.CallId
 import io.ktor.server.plugins.callid.callIdMdc
 import io.ktor.server.plugins.callloging.CallLogging
+import org.slf4j.event.Level
 
 fun Application.configureMonitoring() {
     install(CallId) {
@@ -17,5 +18,6 @@ fun Application.configureMonitoring() {
 
     install(CallLogging) {
         callIdMdc("call-id")
+        level = Level.INFO
     }
 }
