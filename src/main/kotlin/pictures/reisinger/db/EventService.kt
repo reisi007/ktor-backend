@@ -144,8 +144,9 @@ class EventService {
 
     fun getReservationsForEvent(eventId: Long): Map<Long, List<EventSlotInformationDto>> = transaction {
         EventSlotReservations.join(EventSlots, JoinType.LEFT, EventSlotReservations.eventSlot, EventSlots.id)
-            .select { EventSlots.event.eq(eventId) }
-            .orderBy(EventSlots.name to SortOrder.DESC)
+            .selectAll()
+            .where { EventSlots.event.eq(eventId) }
+            .orderBy(EventSlots.name to SortOrder.DESC, EventSlotReservations.id to SortOrder.DESC)
             .asSequence()
             .map { EventSlotReservation.wrapRow(it) }
             .groupBy { it.slot.id.value }
