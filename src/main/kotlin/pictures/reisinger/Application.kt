@@ -4,7 +4,6 @@ import io.ktor.server.application.Application
 import io.ktor.server.netty.EngineMain
 import pictures.reisinger.db.configureDatabase
 import pictures.reisinger.plugins.*
-import pictures.reisinger.selection.module
 import pictures.reisinger.availability.module as availabilityModule
 import pictures.reisinger.events.module as eventsModule
 import pictures.reisinger.module as baseModule
@@ -26,10 +25,9 @@ fun Application.module() {
 }
 
 fun Application.allFeatures() {
-    module()
+    baseModule()
 
     availabilityModule()
-    baseModule()
     eventsModule()
     projectsModule()
     reviewModule()
