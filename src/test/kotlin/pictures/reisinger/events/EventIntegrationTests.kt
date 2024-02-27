@@ -1,4 +1,4 @@
-package pictures.reisinger.events;
+package pictures.reisinger.events
 
 import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
@@ -28,7 +28,7 @@ class EventIntegrationTests {
             eventService.persistEvent(sampleEvent().copy(date = LocalDate.now().minusDays(1)))
         }
     ) {
-        it.getJson<List<EventDto<EventAvailabilityDto>>>("/rest/events")
+        it.getJson<List<PublicEventOutputDto>>("/rest/events")
             .isSuccessContent { getBody().hasSize(1) }
     }
 
@@ -116,11 +116,11 @@ class EventIntegrationTests {
 
 fun sampleEventSlotInformation() = EventSlotInformationDto("Name", "e@mail.com", "+43126", "Text")
 
-fun sampleEvent(): EventDto<EventAvailabilityDto> {
-    return EventDto(
+fun sampleEvent(): PublicEventOutputDto {
+    return PublicEventOutputDto(
         "Title",
         LocalDate.now(),
         "Description",
-        listOf(EventAvailabilityDto(1, "A", isAvailable = true))
+        listOf(PublicEventAvailabilityDto(1, "A", isAvailable = true))
     )
 }

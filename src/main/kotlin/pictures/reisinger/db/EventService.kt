@@ -76,24 +76,20 @@ class EventService {
         var date by Events.date
         var description by Events.description
         val slots by EventSlot referrersOn EventSlots.event
-
     }
 
 
-    fun findAllInFuture(): List<EventDto<EventAvailabilityDto>> = transaction {
-        findEventsInFuture().map { it.toPublicDto() }
-    }
+    fun findAllInFuture(): List<PublicEventOutputDto> = extendedFindAllInFuture()
+        .map { it.asPublic() }
 
-    fun extendedFindAllInFuture(): List<EventDto<AdminEventAvailabilityDto>> = transaction {
-        findEventsInFuture().map { it.toAdminDto() }
-    }
-
-    private fun findEventsInFuture(): SizedIterable<Event> {
-        return Event.find { Events.date greaterEq LocalDate.now() }
+    fun extendedFindAllInFuture(): List<PrivateEventOutputDto> = transaction {
+        Event.find { Events.date greaterEq LocalDate.now() }
             .orderBy(Events.date to SortOrder.ASC)
+            .map { it.toDto() }
     }
 
-    fun persistEvent(eventDto: EventDto<EventAvailabilityDto>) = transaction {
+    // Currently only used in tests
+    fun persistEvent(eventDto: PublicEventOutputDto) = transaction {
         val eventEntity = Event.new {
             title = eventDto.title
             date = eventDto.date
@@ -159,34 +155,38 @@ class EventService {
 
 
 @Serializable
-data class EventDto<E : IEventAvailabilityDto>(
+data class PrivateEventOutputDto(
     val title: String,
     val date: LocalDateAsString,
     val description: String,
-    val availability: List<E>,
+    val availability: List<PrivateEventAvailabilityDto>,
     val id: Long? = null,
 )
 
-interface IEventAvailabilityDto {
-    val id: Long?
-    val slot: String
+@Serializable
+data class PublicEventOutputDto(
+    val title: String,
+    val date: LocalDateAsString,
+    val description: String,
+    val availability: List<PublicEventAvailabilityDto>,
+    val id: Long? = null,
+)
+
+
+@Serializable
+data class PublicEventAvailabilityDto(
+    val id: Long?,
+    val slot: String,
     val isAvailable: Boolean
-}
+)
 
 @Serializable
-data class EventAvailabilityDto(
-    override val id: Long?,
-    override val slot: String,
-    override val isAvailable: Boolean
-) : IEventAvailabilityDto
-
-@Serializable
-data class AdminEventAvailabilityDto(
-    override val id: Long?,
-    override val slot: String,
-    override val isAvailable: Boolean,
+data class PrivateEventAvailabilityDto(
+    val id: Long?,
+    val slot: String,
+    val isAvailable: Boolean,
     val contactInfo: String?
-) : IEventAvailabilityDto
+)
 
 @Serializable
 data class EventSlotReservationDto(val slotId: Long, val info: EventSlotInformationDto)
@@ -200,38 +200,43 @@ data class EventSlotInformationDto(
     val id: Long? = null,
 )
 
-private fun <E : IEventAvailabilityDto> EventService.Event.toDto(mapSlots: EventService.EventSlot.() -> E): EventDto<E> {
-    return EventDto(
+fun PrivateEventOutputDto.asPublic(): PublicEventOutputDto {
+    return PublicEventOutputDto(
+        title,
+        date,
+        description,
+        availability.asSequence()
+            .map {
+                PublicEventAvailabilityDto(
+                    it.id,
+                    it.slot,
+                    it.isAvailable
+                )
+            }
+            .sortedBy { it.slot }
+            .toList(),
+        id,
+    )
+}
+
+fun EventService.Event.toDto(): PrivateEventOutputDto {
+    return PrivateEventOutputDto(
         title,
         date,
         description,
         slots.asSequence()
-            .map(mapSlots)
+            .map {
+                PrivateEventAvailabilityDto(
+                    it.id.value,
+                    it.name,
+                    it.contact == null,
+                    it.contact,
+                )
+            }
             .sortedBy { it.slot }
             .toList(),
         id.value,
     )
-}
-
-fun EventService.Event.toPublicDto(): EventDto<EventAvailabilityDto> {
-    return toDto {
-        EventAvailabilityDto(
-            id.value,
-            name,
-            contact == null
-        )
-    }
-}
-
-fun EventService.Event.toAdminDto(): EventDto<AdminEventAvailabilityDto> {
-    return toDto {
-        AdminEventAvailabilityDto(
-            id.value,
-            name,
-            contact == null,
-            contact
-        )
-    }
 }
 
 private fun EventService.EventSlotReservation.toInformationDto(): EventSlotInformationDto {
