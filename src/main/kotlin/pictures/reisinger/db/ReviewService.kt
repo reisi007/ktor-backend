@@ -6,6 +6,7 @@ import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDate
@@ -36,6 +37,7 @@ class ReviewService {
 
     fun findAll() = transaction {
         Review.all()
+            .orderBy(Reviews.date to SortOrder.DESC)
             .map { it.toDto() }
     }
 
