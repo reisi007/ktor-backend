@@ -37,6 +37,11 @@ fun Application.module() {
 
         authenticate(AuthProviders.JWT_ADMIN) {
             route("admin/events") {
+
+                get {
+                    call.respond(eventService.extendedFindAllInFuture())
+                }
+
                 route("{eventId}") {
                     route("reservations") {
                         get {

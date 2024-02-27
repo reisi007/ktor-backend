@@ -80,12 +80,20 @@ class EventService {
     }
 
 
-    fun findAllInFuture(): List<EventDto> = transaction {
-        Event.find { Events.date greaterEq LocalDate.now() }
-            .map { it.toDto() }
+    fun findAllInFuture(): List<EventDto<EventAvailabilityDto>> = transaction {
+        findEventsInFuture().map { it.toPublicDto() }
     }
 
-    fun persistEvent(eventDto: EventDto) = transaction {
+    fun extendedFindAllInFuture(): List<EventDto<AdminEventAvailabilityDto>> = transaction {
+        findEventsInFuture().map { it.toAdminDto() }
+    }
+
+    private fun findEventsInFuture(): SizedIterable<Event> {
+        return Event.find { Events.date greaterEq LocalDate.now() }
+            .orderBy(Events.date to SortOrder.ASC)
+    }
+
+    fun persistEvent(eventDto: EventDto<EventSlotInformationDto>) = transaction {
         val eventEntity = Event.new {
             title = eventDto.title
             date = eventDto.date
@@ -151,16 +159,34 @@ class EventService {
 
 
 @Serializable
-data class EventDto(
+data class EventDto<E>(
     val title: String,
     val date: LocalDateAsString,
     val description: String,
-    val availability: List<EventAvailabilityDto>,
+    val availability: List<E>,
     val id: Long? = null,
 )
 
+interface IEventAvailabilityDto {
+    val id: Long?
+    val slot: String
+    val isAvailable: Boolean
+}
+
 @Serializable
-data class EventAvailabilityDto(val id: Long?, val slot: String, val isAvailable: Boolean)
+data class EventAvailabilityDto(
+    override val id: Long?,
+    override val slot: String,
+    override val isAvailable: Boolean
+) : IEventAvailabilityDto
+
+@Serializable
+data class AdminEventAvailabilityDto(
+    override val id: Long?,
+    override val slot: String,
+    override val isAvailable: Boolean,
+    val contactInfo: String?
+) : IEventAvailabilityDto
 
 @Serializable
 data class EventSlotReservationDto(val slotId: Long, val info: EventSlotInformationDto)
@@ -174,22 +200,38 @@ data class EventSlotInformationDto(
     val id: Long? = null,
 )
 
-fun EventService.Event.toDto(): EventDto {
+private fun <E : IEventAvailabilityDto> EventService.Event.toDto(mapSlots: EventService.EventSlot.() -> E): EventDto<E> {
     return EventDto(
         title,
         date,
         description,
-        slots.asSequence().map {
-            EventAvailabilityDto(
-                it.id.value,
-                it.name,
-                it.contact == null
-            )
-        }
+        slots.asSequence()
+            .map(mapSlots)
             .sortedBy { it.slot }
             .toList(),
         id.value,
     )
+}
+
+fun EventService.Event.toPublicDto(): EventDto<EventAvailabilityDto> {
+    return toDto {
+        EventAvailabilityDto(
+            id.value,
+            name,
+            contact == null
+        )
+    }
+}
+
+fun EventService.Event.toAdminDto(): EventDto<AdminEventAvailabilityDto> {
+    return toDto {
+        AdminEventAvailabilityDto(
+            id.value,
+            name,
+            contact == null,
+            contact
+        )
+    }
 }
 
 private fun EventService.EventSlotReservation.toInformationDto(): EventSlotInformationDto {
