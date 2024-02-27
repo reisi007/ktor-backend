@@ -21,7 +21,7 @@ class ReviewService {
     object Reviews : LongIdTable() {
         val name = varchar("name", length = 256)
         val public = text("public", eagerLoading = true)
-        val private = text("public", eagerLoading = true).nullable()
+        val private = text("private", eagerLoading = true).nullable()
         val date = date("reviewDate")
     }
 
