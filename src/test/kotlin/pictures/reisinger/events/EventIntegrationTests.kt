@@ -28,7 +28,7 @@ class EventIntegrationTests {
             eventService.persistEvent(sampleEvent().copy(date = LocalDate.now().minusDays(1)))
         }
     ) {
-        it.getJson<List<EventDto>>("/rest/events")
+        it.getJson<List<EventDto<EventAvailabilityDto>>>("/rest/events")
             .isSuccessContent { getBody().hasSize(1) }
     }
 
@@ -116,7 +116,7 @@ class EventIntegrationTests {
 
 fun sampleEventSlotInformation() = EventSlotInformationDto("Name", "e@mail.com", "+43126", "Text")
 
-fun sampleEvent(): EventDto {
+fun sampleEvent(): EventDto<EventAvailabilityDto> {
     return EventDto(
         "Title",
         LocalDate.now(),

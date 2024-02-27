@@ -93,7 +93,7 @@ class EventService {
             .orderBy(Events.date to SortOrder.ASC)
     }
 
-    fun persistEvent(eventDto: EventDto<EventSlotInformationDto>) = transaction {
+    fun persistEvent(eventDto: EventDto<EventAvailabilityDto>) = transaction {
         val eventEntity = Event.new {
             title = eventDto.title
             date = eventDto.date
@@ -159,7 +159,7 @@ class EventService {
 
 
 @Serializable
-data class EventDto<E>(
+data class EventDto<E : IEventAvailabilityDto>(
     val title: String,
     val date: LocalDateAsString,
     val description: String,
