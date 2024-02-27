@@ -1,11 +1,6 @@
 package pictures.reisinger.db
 
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Serializer
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -13,10 +8,10 @@ import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.javatime.date
 import org.jetbrains.exposed.sql.transactions.transaction
+import pictures.reisinger.LocalDateAsString
 import pictures.reisinger.plugins.BadRequest400Exception
 import pictures.reisinger.plugins.NotFound404Exception
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 class EventService {
 
@@ -37,7 +32,7 @@ class EventService {
     object EventSlots : LongIdTable() {
         val name = varchar("slot", length = 128)
         val event = reference("event", Events)
-        val isAvailable = bool("availability").default(true)
+        val contact = text("contact").nullable()
 
         init {
             uniqueIndex("eventSlot", event, name)
@@ -71,7 +66,7 @@ class EventService {
 
         var event by Event referencedOn EventSlots.event
         var name by EventSlots.name
-        var isAvailable by EventSlots.isAvailable
+        var contact by EventSlots.contact
     }
 
     class Event(id: EntityID<Long>) : LongEntity(id) {
@@ -105,14 +100,14 @@ class EventService {
         }
     }
 
-    fun bookSlot(eventId: Long, slotId: Long) = transaction {
+    fun bookSlot(eventId: Long, slotId: Long, contactInfo: String) = transaction {
         val result = EventSlot.find {
             (EventSlots.event eq eventId) and (EventSlots.id eq slotId)
         }.firstOrNull()
 
         if (result == null) throw NotFound404Exception
 
-        result.isAvailable = false
+        result.contact = contactInfo
     }
 
     fun deleteBookedSlot(eventId: Long, slotId: Long) = transaction {
@@ -122,7 +117,7 @@ class EventService {
 
         if (result == null) throw NotFound404Exception
 
-        result.isAvailable = true
+        result.contact = null
     }
 
     fun insertReservation(reservation: EventSlotReservationDto): Unit = transaction {
@@ -179,23 +174,6 @@ data class EventSlotInformationDto(
     val id: Long? = null,
 )
 
-typealias LocalDateAsString = @Serializable(with = LocalDateSerializer::class) LocalDate
-
-@OptIn(ExperimentalSerializationApi::class)
-@Serializer(forClass = LocalDate::class)
-class LocalDateSerializer : KSerializer<LocalDate> {
-    private val formatter: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
-
-    override fun serialize(encoder: Encoder, value: LocalDate) {
-        encoder.encodeString(value.format(formatter))
-    }
-
-    override fun deserialize(decoder: Decoder): LocalDate {
-        return LocalDate.parse(decoder.decodeString(), formatter)
-    }
-}
-
-
 fun EventService.Event.toDto(): EventDto {
     return EventDto(
         title,
@@ -205,7 +183,7 @@ fun EventService.Event.toDto(): EventDto {
             EventAvailabilityDto(
                 it.id.value,
                 it.name,
-                it.isAvailable
+                it.contact == null
             )
         }
             .sortedBy { it.slot }

@@ -6,7 +6,6 @@ import pictures.reisinger.db.configureDatabase
 import pictures.reisinger.plugins.*
 import pictures.reisinger.availability.module as availabilityModule
 import pictures.reisinger.events.module as eventsModule
-import pictures.reisinger.module as baseModule
 import pictures.reisinger.projects.module as projectsModule
 import pictures.reisinger.reviews.module as reviewModule
 import pictures.reisinger.selection.module as selectionModule
@@ -25,7 +24,7 @@ fun Application.module() {
 }
 
 fun Application.allFeatures() {
-    baseModule()
+    module()
 
     availabilityModule()
     eventsModule()

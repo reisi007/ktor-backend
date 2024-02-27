@@ -5,6 +5,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
+import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.routing.*
 import io.ktor.server.util.getOrFail
@@ -57,7 +58,8 @@ fun Application.module() {
                         put {
                             val eventId = call.parameters.getOrFail("eventId").toLong()
                             val slotId = call.parameters.getOrFail("slotId").toLong()
-                            eventService.bookSlot(eventId, slotId)
+                            val body = call.receiveText()
+                            eventService.bookSlot(eventId, slotId, body)
                             call.response.status(HttpStatusCode.OK)
                         }
 

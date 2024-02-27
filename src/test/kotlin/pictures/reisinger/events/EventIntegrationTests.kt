@@ -91,7 +91,7 @@ class EventIntegrationTests {
         val eventService = EventService()
         val eventDto = sampleEvent()
         eventService.persistEvent(eventDto)
-        eventService.bookSlot(1, 1)
+        eventService.bookSlot(1, 1, "Contact info")
     }) { client ->
         client.delete("admin/events/1/slots/1/booking").status.assertThis {
             isEqualTo(HttpStatusCode.OK)
