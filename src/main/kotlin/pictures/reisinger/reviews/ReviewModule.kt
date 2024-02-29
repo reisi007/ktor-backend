@@ -1,5 +1,6 @@
 package pictures.reisinger.reviews
 
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.CachingOptions
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
@@ -25,6 +26,7 @@ fun Application.module() {
             put {
                 val body = call.receive<ReviewInputDto>()
                 reviewService.insertReview(body)
+                call.respond(HttpStatusCode.OK)
             }
         }
 

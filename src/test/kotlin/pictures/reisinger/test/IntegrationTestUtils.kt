@@ -31,6 +31,7 @@ import pictures.reisinger.events.module as eventsModule
 import pictures.reisinger.module as baseModule
 import pictures.reisinger.projects.module as projectsModule
 import pictures.reisinger.selection.module as selectionModule
+import pictures.reisinger.reviews.module as reviewsModule
 
 fun testAvailabilityModule(block: IntegrationTestBuilder) = testWithDefaultConfig {
 
@@ -80,6 +81,24 @@ fun testSelectionsModule(setupServer: IntegrationTestServerSetup = {}, block: su
 
         block(setupTestHttpClient())
     }
+
+fun testReviewModule(setupServer: IntegrationTestServerSetup = {}, block: IntegrationTestBuilder) =
+    testWithDefaultConfig {
+
+        application {
+            baseModule()
+            reviewsModule()
+            setupServer()
+        }
+
+        block(setupTestHttpClient())
+    }
+
+fun testAdminReviewModule(setupServer: IntegrationTestServerSetup = {}, block: IntegrationTestBuilder) =
+    testReviewModule(setupServer = {
+        setupServer()
+        createAdminUserInDb()
+    }) { block(createTestAdminHttpClient()) }
 
 fun testEventModule(setupServer: IntegrationTestServerSetup = {}, block: IntegrationTestBuilder) =
     testWithDefaultConfig {

@@ -4,6 +4,7 @@ package pictures.reisinger.test
 import assertk.Assert
 import assertk.assertAll
 import assertk.assertThat
+import assertk.assertions.isEqualTo
 import assertk.assertions.prop
 import assertk.assertions.support.expected
 import assertk.assertions.support.fail
@@ -20,25 +21,25 @@ import java.util.*
 import kotlin.reflect.KProperty1
 
 @TestDsl
-suspend inline fun <reified T> HttpClient.postJson(url: String, data: T): HttpReturn<T> = post(url) {
+suspend inline fun <reified T> HttpClient.postJson(url: String, data: T): HttpReturn<Unit> = post(url) {
     accept(ContentType.Application.Json)
     contentType(ContentType.Application.Json)
     setBody(data)
-}.toHttpReturn<T>()
+}.toHttpReturn<Unit>()
 
 @TestDsl
-suspend inline fun <reified T> HttpClient.putJson(url: String, data: T): HttpReturn<T> = put(url) {
+suspend inline fun <reified T> HttpClient.putJson(url: String, data: T): HttpReturn<Unit> = put(url) {
     accept(ContentType.Application.Json)
     contentType(ContentType.Application.Json)
     setBody(data)
-}.toHttpReturn<T>()
+}.toHttpReturn<Unit>()
 
 @TestDsl
-suspend inline fun <reified T> HttpClient.deleteJson(url: String, data: T): HttpReturn<T> = delete(url) {
+suspend inline fun <reified T> HttpClient.deleteJson(url: String, data: T): HttpReturn<Unit> = delete(url) {
     accept(ContentType.Application.Json)
     contentType(ContentType.Application.Json)
     setBody(data)
-}.toHttpReturn<T>()
+}.toHttpReturn<Unit>()
 
 @TestDsl
 suspend inline fun <reified T> HttpClient.getJson(url: String): HttpReturn<T> = get(url) {
@@ -49,7 +50,7 @@ suspend inline fun <reified T> HttpClient.getJson(url: String): HttpReturn<T> = 
 suspend inline fun <reified T> HttpResponse.toHttpReturn(): HttpReturn<T> = when (status.value) {
     204, 205, 304 -> NoContent(status, headers)
     in 200 until 300 -> SuccessContent(status, headers, body<T>())
-    else -> ErrorContent(bodyAsText(), headers)
+    else -> ErrorContent(status, bodyAsText(), headers)
 }
 
 fun HttpReturn<Any>.isNoContent(block: Assert<NoContent<Any>>.() -> Unit = {}) =
@@ -61,13 +62,17 @@ inline fun <reified T : Any> Assert<Any>.isInstanceOf(): Assert<T> {
     }
 }
 
-fun HttpReturn<Any>.isErrorContent(block: Assert<ErrorContent<Any>>.() -> Unit) =
-    assertThis { block(isInstanceOf<ErrorContent<Any>>()) }
+fun HttpReturn<Any>.isErrorContent(block: Assert<ErrorContent<Unit>>.() -> Unit) =
+    assertThis { block(isInstanceOf<ErrorContent<Unit>>()) }
 
-fun <T> HttpReturn<T>.isSuccessContent(block: Assert<SuccessContent<T>>.() -> Unit) =
+fun <T> HttpReturn<T>.isSuccessContent(block: Assert<SuccessContent<T>>.() -> Unit = {}) =
     assertThis { block(isInstanceOf<SuccessContent<T>>()) }
 
 fun <T> Assert<SuccessContent<T>>.getBody() = prop(SuccessContent<T>::data)
+
+fun <T> Assert<ErrorContent<T>>.hasStatus(statusCode: HttpStatusCode) {
+    transform { it.statusCode }.isEqualTo(statusCode)
+}
 
 fun <T> T.assertThis(block: Assert<T>.() -> Unit) = assertAll {
     assertThat(this).let(block)
@@ -100,7 +105,7 @@ sealed interface HttpReturn<T>
 data class NoContent<T>(val statusCode: HttpStatusCode, val headers: Headers) : HttpReturn<T>
 
 @TestDsl
-data class ErrorContent<T>(val apiError: String, val headers: Headers) : HttpReturn<T>
+data class ErrorContent<T>(val statusCode: HttpStatusCode, val apiError: String, val headers: Headers) : HttpReturn<T>
 
 @TestDsl
 data class SuccessContent<T>(val statusCode: HttpStatusCode, val headers: Headers, val data: T) : HttpReturn<T>
