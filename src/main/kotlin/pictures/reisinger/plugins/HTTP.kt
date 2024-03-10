@@ -8,7 +8,6 @@ import io.ktor.server.application.install
 import io.ktor.server.plugins.compression.Compression
 import io.ktor.server.plugins.compression.deflate
 import io.ktor.server.plugins.compression.gzip
-import io.ktor.server.plugins.compression.minimumSize
 import io.ktor.server.plugins.cors.routing.CORS
 
 fun Application.configureHTTP() {
@@ -27,10 +26,8 @@ fun Application.configureHTTP() {
         gzip {
             priority = 1.0
         }
-        deflate {
-            priority = 10.0
-            minimumSize(1024) // condition
-        }
+
+        deflate()
     }
 }
 
